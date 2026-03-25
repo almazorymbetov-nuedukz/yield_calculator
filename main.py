@@ -4,10 +4,10 @@ import os
 import torch
 import torch.nn
 import torch.optim
-import numpy
-import pandas
+import numpy as np
+import pandas as pd
 import joblib
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 def setup():
     pkgs = ['torch', 'numpy', 'pandas', 'scikit-learn', 'joblib']
@@ -17,8 +17,9 @@ def setup():
 
 setup()
 
-BIO_HSP = [15.2, 4.2, 8.5]
-DES_HSP = [16.5, 15.0, 38.2]
+BIO_HSP = np.array([15.2, 4.2, 8.5])
+DES_BASE_HSP = np.array([16.5, 15.0, 38.2])
+WATER_HSP = np.array([15.5, 16.0, 42.3])
 R0_GLY = 12.1
 FILE_MODEL, FILE_SX, FILE_SY = 'model.pth', 'sx.joblib', 'sy.joblib'
 
@@ -29,7 +30,7 @@ class ResBlock(torch.nn.Module):
             torch.nn.Linear(n, n), 
             torch.nn.LayerNorm(n), 
             torch.nn.Mish(), 
-            torch.nn.Dropout(0.1)
+            torch.nn.Dropout(0.15)
         )
     def forward(self, x): return x + self.b(x)
 
@@ -37,23 +38,34 @@ class BioNet(torch.nn.Module):
     def __init__(self, in_size):
         super().__init__()
         self.top = torch.nn.Sequential(torch.nn.Linear(in_size, 128), torch.nn.Mish())
-        self.res = torch.nn.Sequential(*[ResBlock(128) for _ in range(3)])
-        self.out = torch.nn.Linear(128, 1)
+        self.res = torch.nn.Sequential(*[ResBlock(128) for _ in range(4)])
+        self.out = torch.nn.Sequential(
+            torch.nn.Linear(128, 1),
+            torch.nn.Sigmoid()
+        )
     def forward(self, x): return self.out(self.res(self.top(x)))
-
-def hsp_logic(t):
-    dist_sq = 4*(DES_HSP[0] - BIO_HSP[0])**2 + (DES_HSP[1] - BIO_HSP[1])**2 + (DES_HSP[2] - BIO_HSP[2])**2
-    ra = numpy.sqrt(dist_sq) * (298.15 / t)
-    red = ra / R0_GLY 
-    return ra, red
 
 def engineer(df):
     df = df.copy()
     df['Inv_T'] = 1000.0 / df['T']
-    df['Log_V'] = numpy.log(df['V'] + 1e-5) 
-    df['Kinetic'] = df['Log_V'] * df['Inv_T'] 
-    h_res = [hsp_logic(temp) for temp in df['T']]
-    df['Ra'], df['RED'] = zip(*h_res)
+    df['Log_V'] = np.log(df['V'] + 1e-5) 
+    df['Kinetic_Barrier'] = df['Log_V'] * df['Inv_T']
+    
+    ra_list, red_list = [], []
+    for _, row in df.iterrows():
+        w_frac = row['W'] / 100.0
+        r_mod = 1.0 + (row['R'] - 2.0) * 0.05
+        
+        eff_hsp = (DES_BASE_HSP * (1 - w_frac) + WATER_HSP * w_frac) * r_mod
+        
+        dist_sq = 4*(eff_hsp[0] - BIO_HSP[0])**2 + (eff_hsp[1] - BIO_HSP[1])**2 + (eff_hsp[2] - BIO_HSP[2])**2
+        ra = np.sqrt(dist_sq) * (298.15 / row['T'])
+        
+        ra_list.append(ra)
+        red_list.append(ra / R0_GLY)
+        
+    df['Ra_Dynamic'] = ra_list
+    df['RED_Dynamic'] = red_list
     return df
 
 def train():
@@ -67,29 +79,38 @@ def train():
         'G': [0.8, 0.6, 0.5, 0.44, 0.75, 0.5, 0.6, 0.55, 0.55],
         'E': [99.1, 96.5, 92.1, 88.5, 96.6, 97.2, 45.0, 20.0, 15.0]
     }
-    df = pandas.DataFrame(raw)
+    df = pd.DataFrame(raw)
     
     aug = []
-    for _ in range(6000):
-        s = df.sample(n=1).copy()
-        s['T'] += numpy.random.normal(0, 0.5)
-        s['V'] *= numpy.random.uniform(0.98, 1.02)
-        s['E'] = numpy.clip(s['E'] + numpy.random.normal(0, 0.1), 0, 100)
-        aug.append(s.values[0])
+    for _ in range(8000):
+        s = df.sample(n=1).copy().values[0]
+        s2 = df.sample(n=1).values[0]
+        alpha = np.random.uniform(0, 1)
+        synthetic_row = s * alpha + s2 * (1 - alpha)
+        
+        synthetic_row[0] += np.random.uniform(-2, 2)
+        synthetic_row[3] *= np.random.uniform(0.9, 1.1)
+        
+        if synthetic_row[5] > 3.0: synthetic_row[7] *= 0.4
+        if synthetic_row[3] > 800: synthetic_row[7] *= 0.6
+        synthetic_row[7] = np.clip(synthetic_row[7], 0, 100)
+        
+        aug.append(synthetic_row)
     
-    f_df = engineer(pandas.DataFrame(aug, columns=df.columns))
+    f_df = engineer(pd.DataFrame(aug, columns=df.columns))
     x, y = f_df.drop('E', axis=1).values, f_df['E'].values.reshape(-1, 1)
     
-    sx, sy = StandardScaler().fit(x), StandardScaler().fit(y)
+    sx, sy = StandardScaler().fit(x), MinMaxScaler(feature_range=(0, 1)).fit(y)
     joblib.dump(sx, FILE_SX); joblib.dump(sy, FILE_SY)
 
     net = BioNet(x.shape[1])
-    opt = torch.optim.AdamW(net.parameters(), lr=0.0008, weight_decay=1e-4)
+    opt = torch.optim.AdamW(net.parameters(), lr=0.001, weight_decay=1e-4)
     xt, yt = torch.FloatTensor(sx.transform(x)), torch.FloatTensor(sy.transform(y))
     
-    for epoch in range(2500):
+    loss_fn = torch.nn.HuberLoss()
+    for epoch in range(3000):
         net.train(); opt.zero_grad()
-        loss = torch.nn.HuberLoss()(net(xt), yt)
+        loss = loss_fn(net(xt), yt)
         loss.backward(); opt.step()
         
     torch.save(net.state_dict(), FILE_MODEL)
@@ -97,22 +118,22 @@ def train():
 def predict(t, r, d, v, m, w, g):
     if not os.path.exists(FILE_MODEL): train()
 
-    if d > 2.0 or d < 0.6: raise ValueError(f"Physically impossible density: {d} g/cm3")
-    if t < 273 or t > 500: raise ValueError(f"Temperature {t}K outside operational range.")
+    if d > 2.0 or d < 0.6: raise ValueError(f"Wrong density: {d} g/cm3")
+    if t < 273 or t > 500: raise ValueError(f"Temperature {t}K is out of range.")
 
-    row_raw = pandas.DataFrame([[t, r, d, v, m, w, g]], columns=['T','R','D','V','M','W','G'])
+    row_raw = pd.DataFrame([[t, r, d, v, m, w, g]], columns=['T','R','D','V','M','W','G'])
     f_vec = engineer(row_raw).values
     
     sx, sy = joblib.load(FILE_SX), joblib.load(FILE_SY)
     net = BioNet(f_vec.shape[1])
     net.load_state_dict(torch.load(FILE_MODEL))
     
-    net.train() 
+    net.train()
     with torch.no_grad():
-        preds = [sy.inverse_transform(net(torch.FloatTensor(sx.transform(f_vec))).numpy())[0][0] for _ in range(50)]
+        preds = [sy.inverse_transform(net(torch.FloatTensor(sx.transform(f_vec))).numpy())[0][0] for _ in range(100)]
     
-    y_avg = numpy.clip(numpy.mean(preds), 0, 100)
-    y_std = numpy.std(preds)
+    y_avg = np.mean(preds)
+    y_std = np.std(preds)
     
     res_gly = g * (1 - (y_avg / 100))
     purity = 100.0 - res_gly
@@ -121,20 +142,18 @@ def predict(t, r, d, v, m, w, g):
 
 if __name__ == "__main__":
     try:
-        print("\n--- Industrial Biodiesel Purity Analysis ---")
         t = float(input("Temperature (K): "))
         r = float(input("Molar Ratio: "))
         d = float(input("Density (g/cm3): "))
         v = float(input("Viscosity (mPa s): "))
         m = float(input("DES/Oil Mass Ratio: "))
-        w = float(input("Water Content (%): "))
+        w = float(input("Water (%): "))
         g = float(input("Initial Glycerol (%): "))
 
         y_avg, y_std, gly, pur = predict(t, r, d, v, m, w, g)
         
-        print(f"Extraction Yield:   {y_avg:.2f}% (±{2*y_std:.2f}%)")
-        print(f"Residual Glycerol:  {gly:.4f}%")
-        print(f"Biodiesel Purity:   {pur:.4f}%")
-
-
-    except Exception as e: print(f"\n[CRITICAL ERROR]: {e}")
+        print(f"Yield: {y_avg:.2f}% (±{2*y_std:.2f}%)")
+        print(f"Residual Glycerol: {gly:.4f}%")
+        print(f"Purity: {pur:.4f}%")
+    except Exception as e: 
+        print(f"Error")
