@@ -6,10 +6,11 @@ The core of the model is Multi-Layer Perceptron (MLP) with following functions:
 2. Residual Blocks - x+f(x): Adds input back to the output of the layer
 3. Layer Normalisation: Preventing high values to disrupt the learning process
 4. Hansen Solubility Parameters (HSP): Calculates solubility distance and relative energy difference to predict thermodynamic relationships between DES and biodiesel
-5. Arrhenius-Style Kinetic Mapping: Helps to model to clarify how fast molecular thickness and speed effects extraction process
+5. Arrhenius-Style Kinetic Mapping: Helps to model to clarify how fast molecular thickness and speed effects extraction process 
 6. AdamW Optimizer: Prevents model overfitting and helps to understand general trends
 7. Huber Loss: Prevents strange or extreme data to affect negatively on learning process
 8. Monte Carlo Dropout: Doing about hundred calculations with different use of neural networks, and shows certainty of the calculation
+9. Thermodynamic Saturation Index: If the solvent's volume is too small, uses limit-check in order to prevent high yield values
 
 
 --------------------------------------------------------------------

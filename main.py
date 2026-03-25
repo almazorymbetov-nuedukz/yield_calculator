@@ -50,6 +50,7 @@ def engineer(df):
     df['Inv_T'] = 1000.0 / df['T']
     df['Log_V'] = np.log(df['V'] + 1e-5) 
     df['Kinetic_Barrier'] = df['Log_V'] * df['Inv_T']
+    df['Saturation_Index'] = df['G'] / (df['M'] + 1e-4)
     
     ra_list, red_list = [], []
     for _, row in df.iterrows():
@@ -88,13 +89,17 @@ def train():
         alpha = np.random.uniform(0, 1)
         synthetic_row = s * alpha + s2 * (1 - alpha)
         
-        synthetic_row[0] += np.random.uniform(-2, 2)
-        synthetic_row[3] *= np.random.uniform(0.9, 1.1)
+        synthetic_row[0] += np.random.uniform(-2, 2) 
+        synthetic_row[3] *= np.random.uniform(0.9, 1.1) 
         
         if synthetic_row[5] > 3.0: synthetic_row[7] *= 0.4
         if synthetic_row[3] > 800: synthetic_row[7] *= 0.6
-        synthetic_row[7] = np.clip(synthetic_row[7], 0, 100)
         
+        saturation_index = synthetic_row[6] / (synthetic_row[4] + 1e-4)
+        if saturation_index > 12.0:
+            synthetic_row[7] *= (12.0 / saturation_index)
+            
+        synthetic_row[7] = np.clip(synthetic_row[7], 0, 100)
         aug.append(synthetic_row)
     
     f_df = engineer(pd.DataFrame(aug, columns=df.columns))
@@ -156,4 +161,4 @@ if __name__ == "__main__":
         print(f"Residual Glycerol: {gly:.4f}%")
         print(f"Purity: {pur:.4f}%")
     except Exception as e: 
-        print(f"Error")
+        print(f"Error {e}")
