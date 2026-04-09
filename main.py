@@ -16,12 +16,17 @@ def setup():
         except ImportError: subprocess.check_call([sys.executable, "-m", "pip", "install", p])
 
 setup()
-
 BIO_HSP = np.array([15.2, 4.2, 8.5])
 DES_BASE_HSP = np.array([16.5, 15.0, 38.2])
 WATER_HSP = np.array([15.5, 16.0, 42.3])
 R0_GLY = 12.1
 FILE_MODEL, FILE_SX, FILE_SY = 'model.pth', 'sx.joblib', 'sy.joblib'
+
+DFT_DH = -600.76691
+DFT_DS = -0.129758
+DFT_E_INT = -60.5956
+DFT_VOL = 61.067372 
+R_GAS = 0.008314 
 
 class ResBlock(torch.nn.Module):
     def __init__(self, n):
@@ -51,6 +56,10 @@ def engineer(df):
     df['Log_V'] = np.log(df['V'] + 1e-5) 
     df['Kinetic_Barrier'] = df['Log_V'] * df['Inv_T']
     df['Saturation_Index'] = df['G'] / (df['M'] + 1e-4)
+    df['Thermo_DG_T'] = DFT_DH - (df['T'] * DFT_DS)
+    df['Equilibrium_Proxy'] = np.exp(-(df['Thermo_DG_T'] / 100) / (R_GAS * df['T']))
+    df['Adj_Interaction_E'] = DFT_E_INT / (df['R'] + 1e-4)
+    df['DES_Volume'] = DFT_VOL
     
     ra_list, red_list = [], []
     for _, row in df.iterrows():
@@ -157,8 +166,9 @@ if __name__ == "__main__":
 
         y_avg, y_std, gly, pur = predict(t, r, d, v, m, w, g)
         
+        print(f"\n--- Model Predictions ---")
         print(f"Yield: {y_avg:.2f}% (±{2*y_std:.2f}%)")
         print(f"Residual Glycerol: {gly:.4f}%")
         print(f"Purity: {pur:.4f}%")
     except Exception as e: 
-        print(f"Error {e}")
+        print(f"Error: {e}")
