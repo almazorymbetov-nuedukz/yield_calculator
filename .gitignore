@@ -3,3 +3,8 @@ __pycache__/
 *.pth
 *.joblib
 .vscode/
+
+dist/
+build/
+*.exe
+*.pkg
