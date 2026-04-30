@@ -1,21 +1,15 @@
-import subprocess
-import sys
 import os
+import re
 import torch
 import torch.nn
-import torch.optim
 import numpy as np
 import pandas as pd
 import joblib
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
+import customtkinter as ctk
+from tkinter import messagebox
+import threading
 
-def setup():
-    pkgs = ['torch', 'numpy', 'pandas', 'scikit-learn', 'joblib']
-    for p in pkgs:
-        try: __import__(p)
-        except ImportError: subprocess.check_call([sys.executable, "-m", "pip", "install", p])
-
-setup()
 BIO_HSP = np.array([15.2, 4.2, 8.5])
 DES_BASE_HSP = np.array([16.5, 15.0, 38.2])
 WATER_HSP = np.array([15.5, 16.0, 42.3])
@@ -27,6 +21,62 @@ DFT_DS = -0.129758
 DFT_E_INT = -60.5956
 DFT_VOL = 61.067372 
 R_GAS = 0.008314 
+LOG_FOLDER = 'logs'
+LOG_GLYCEROL = 'GLYCEROL.LOG'
+LOG_CHOLINE = 'CHOLINE+.LOG'
+LOG_DES = {
+    1.0: '1-1.LOG',
+    2.0: '1-2.LOG',
+    3.0: '1-3.LOG'
+}
+
+
+def parse_gaussian_log(path):
+    result = {'scf': None, 'enthalpy': None, 'free_energy': None}
+    if not os.path.exists(path):
+        return result
+    with open(path, 'r', encoding='utf-8', errors='ignore') as fd:
+        text = fd.read()
+    def last_float(pattern):
+        matches = re.findall(pattern, text)
+        return float(matches[-1]) if matches else None
+    result['scf'] = last_float(r'SCF Done:\s*E\([^\)]+\)\s*=\s*([\-\d\.]+)')
+    result['enthalpy'] = last_float(r'Sum of electronic and thermal Enthalpies=\s*([\-\d\.]+)')
+    result['free_energy'] = last_float(r'Sum of electronic and thermal Free Energies=\s*([\-\d\.]+)')
+    if result['free_energy'] is None:
+        result['free_energy'] = result['scf']
+    if result['enthalpy'] is None:
+        result['enthalpy'] = result['scf']
+    return result
+
+
+def load_quantum_references():
+    data = {}
+    data[LOG_GLYCEROL] = parse_gaussian_log(os.path.join(LOG_FOLDER, LOG_GLYCEROL))
+    data[LOG_CHOLINE] = parse_gaussian_log(os.path.join(LOG_FOLDER, LOG_CHOLINE))
+    for ratio, filename in LOG_DES.items():
+        data[filename] = parse_gaussian_log(os.path.join(LOG_FOLDER, filename))
+    glycerol_ref = data.get(LOG_GLYCEROL, {})
+    choline_ref = data.get(LOG_CHOLINE, {})
+    for filename in LOG_DES.values():
+        entry = data.get(filename, {})
+        if entry is None:
+            continue
+        if (glycerol_ref.get('free_energy') is not None and 
+            choline_ref.get('free_energy') is not None and 
+            entry.get('free_energy') is not None):
+            entry['formation_free'] = entry['free_energy'] - (glycerol_ref['free_energy'] + choline_ref['free_energy'])
+        else:
+            entry['formation_free'] = None
+        if (glycerol_ref.get('enthalpy') is not None and 
+            choline_ref.get('enthalpy') is not None and 
+            entry.get('enthalpy') is not None):
+            entry['formation_enthalpy'] = entry['enthalpy'] - (glycerol_ref['enthalpy'] + choline_ref['enthalpy'])
+        else:
+            entry['formation_enthalpy'] = None
+    return data
+
+QUANTUM_DATA = load_quantum_references()
 
 class ResBlock(torch.nn.Module):
     def __init__(self, n):
@@ -50,6 +100,31 @@ class BioNet(torch.nn.Module):
         )
     def forward(self, x): return self.out(self.res(self.top(x)))
 
+def get_quantum_features(ratio):
+    ratios = np.array(sorted(LOG_DES.keys()), dtype=float)
+    def interp(field):
+        valid_ratios = []
+        valid_values = []
+        for r in ratios:
+            entry = QUANTUM_DATA.get(LOG_DES[r], {})
+            val = entry.get(field)
+            if val is not None:
+                valid_ratios.append(r)
+                valid_values.append(val)
+        if not valid_values:
+            return 0.0
+        valid_ratios = np.array(valid_ratios)
+        valid_values = np.array(valid_values)
+        return float(np.interp(ratio, valid_ratios, valid_values, left=valid_values[0], right=valid_values[-1]))
+    return {
+        'des_scf': interp('scf'),
+        'des_enthalpy': interp('enthalpy'),
+        'des_free_energy': interp('free_energy'),
+        'formation_free': interp('formation_free'),
+        'formation_enthalpy': interp('formation_enthalpy')
+    }
+
+
 def engineer(df):
     df = df.copy()
     df['Inv_T'] = 1000.0 / df['T']
@@ -62,6 +137,8 @@ def engineer(df):
     df['DES_Volume'] = DFT_VOL
     
     ra_list, red_list = [], []
+    des_scf, des_h, des_g = [], [], []
+    des_formation_g, des_formation_h = [], []
     for _, row in df.iterrows():
         w_frac = row['W'] / 100.0
         r_mod = 1.0 + (row['R'] - 2.0) * 0.05
@@ -73,9 +150,22 @@ def engineer(df):
         
         ra_list.append(ra)
         red_list.append(ra / R0_GLY)
+
+        q = get_quantum_features(row['R'])
+        des_scf.append(q['des_scf'])
+        des_h.append(q['des_enthalpy'])
+        des_g.append(q['des_free_energy'])
+        des_formation_g.append(q['formation_free'])
+        des_formation_h.append(q['formation_enthalpy'])
         
     df['Ra_Dynamic'] = ra_list
     df['RED_Dynamic'] = red_list
+    df['DFT_DES_SCF'] = des_scf
+    df['DFT_DES_Enthalpy'] = des_h
+    df['DFT_DES_FreeEnergy'] = des_g
+    df['DFT_Formation_DeltaG'] = des_formation_g
+    df['DFT_Formation_DeltaH'] = des_formation_h
+    df['Quantum_Stability_Index'] = -df['DFT_Formation_DeltaG']
     return df
 
 def train():
@@ -140,7 +230,12 @@ def predict(t, r, d, v, m, w, g):
     
     sx, sy = joblib.load(FILE_SX), joblib.load(FILE_SY)
     net = BioNet(f_vec.shape[1])
-    net.load_state_dict(torch.load(FILE_MODEL))
+    try:
+        net.load_state_dict(torch.load(FILE_MODEL))
+    except Exception:
+        train()
+        net = BioNet(f_vec.shape[1])
+        net.load_state_dict(torch.load(FILE_MODEL))
     
     net.train()
     with torch.no_grad():
@@ -155,20 +250,147 @@ def predict(t, r, d, v, m, w, g):
     return y_avg, y_std, res_gly, purity
 
 if __name__ == "__main__":
-    try:
-        t = float(input("Temperature (K): "))
-        r = float(input("Molar Ratio: "))
-        d = float(input("Density (g/cm3): "))
-        v = float(input("Viscosity (mPa s): "))
-        m = float(input("DES/Oil Mass Ratio: "))
-        w = float(input("Water (%): "))
-        g = float(input("Initial Glycerol (%): "))
+    ctk.set_appearance_mode("light")  # White theme
+    ctk.set_default_color_theme("blue")  # Modern theme
 
-        y_avg, y_std, gly, pur = predict(t, r, d, v, m, w, g)
-        
-        print(f"\n--- Model Predictions ---")
-        print(f"Yield: {y_avg:.2f}% (±{2*y_std:.2f}%)")
-        print(f"Residual Glycerol: {gly:.4f}%")
-        print(f"Purity: {pur:.4f}%")
-    except Exception as e: 
-        print(f"Error: {e}")
+    def validate_float(value, name, min_value=None, max_value=None):
+        try:
+            number = float(value)
+        except ValueError:
+            raise ValueError(f"{name} must be a valid number.")
+        if min_value is not None and number < min_value:
+            raise ValueError(f"{name} must be at least {min_value}.")
+        if max_value is not None and number > max_value:
+            raise ValueError(f"{name} must be at most {max_value}.")
+        return number
+
+    def calculate_threaded():
+        try:
+            t = validate_float(entries['Temperature (K)'].get(), 'Temperature (K)', 273, 500)
+            r = validate_float(entries['Molar Ratio'].get(), 'Molar Ratio', 0)
+            d = validate_float(entries['Density (g/cm3)'].get(), 'Density (g/cm3)', 0.1, 5.0)
+            v = validate_float(entries['Viscosity (mPa s)'].get(), 'Viscosity (mPa s)', 0)
+            m = validate_float(entries['DES/Oil Mass Ratio'].get(), 'DES/Oil Mass Ratio', 0)
+            w = validate_float(entries['Water (%)'].get(), 'Water (%)', 0, 100)
+            g = validate_float(entries['Initial Glycerol (%)'].get(), 'Initial Glycerol (%)', 0, 100)
+
+            status_label.configure(text="Calculating...", text_color="blue")
+            calc_button.configure(state="disabled")
+            root.update_idletasks()
+
+            # Run prediction in thread
+            def run_calc():
+                try:
+                    y_avg, y_std, gly, pur = predict(t, r, d, v, m, w, g)
+                    result_text = (
+                        f"Yield: {y_avg:.2f}% (±{2 * y_std:.2f}%)\n"
+                        f"Residual Glycerol: {gly:.4f}%\n"
+                        f"Purity: {pur:.4f}%"
+                    )
+                    def update_ui():
+                        result_label.configure(text=result_text, text_color="black")
+                        status_label.configure(
+                            text=(
+                                "Calculation completed.\n"
+                                f"Yield: {y_avg:.2f}%\n"
+                                f"Residual Glycerol: {gly:.4f}%\n"
+                                f"Purity: {pur:.4f}%"
+                            ),
+                            text_color="green"
+                        )
+                        calc_button.configure(state="normal")
+                    root.after(0, update_ui)
+                except Exception as exc:
+                    def update_error():
+                        status_label.configure(text="Error occurred.", text_color="red")
+                        calc_button.configure(state="normal")
+                        messagebox.showerror("Input Error", str(exc))
+                    root.after(0, update_error)
+
+            threading.Thread(target=run_calc, daemon=True).start()
+
+        except Exception as exc:
+            status_label.configure(text="Error occurred.", text_color="red")
+            messagebox.showerror("Input Error", str(exc))
+            calc_button.configure(state="normal")
+
+    root = ctk.CTk()
+    root.title("Yield Calculator")
+    root.geometry("550x700")
+    root.resizable(False, False)
+
+    # Main frame with gradient-like background (using CTkFrame)
+    main_frame = ctk.CTkFrame(root, fg_color=["#f0f0f0", "#ffffff"], corner_radius=20)
+    main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+    title_label = ctk.CTkLabel(main_frame, text="Yield Calculator", font=ctk.CTkFont(size=24, weight="bold"))
+    title_label.pack(pady=(20, 10))
+
+    # Input frame
+    input_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
+    input_frame.pack(pady=10, padx=20, fill="x")
+
+    labels = [
+        "Temperature (K)",
+        "Molar Ratio",
+        "Density (g/cm3)",
+        "Viscosity (mPa s)",
+        "DES/Oil Mass Ratio",
+        "Water (%)",
+        "Initial Glycerol (%)"
+    ]
+
+    defaults = [298.15, 2.0, 1.18, 259, 0.1, 0.05, 0.8]
+    entries = {}
+
+    for label_text, default_value in zip(labels, defaults):
+        row_frame = ctk.CTkFrame(input_frame, fg_color="transparent")
+        row_frame.pack(fill="x", pady=5)
+
+        lbl = ctk.CTkLabel(row_frame, text=label_text + ":", font=ctk.CTkFont(size=12))
+        lbl.pack(side="left", padx=(0, 10))
+
+        entry = ctk.CTkEntry(row_frame, width=200, placeholder_text=str(default_value))
+        entry.insert(0, str(default_value))
+        entry.pack(side="right")
+        entries[label_text] = entry
+
+    # Calculate button with gradient
+    calc_button = ctk.CTkButton(
+        main_frame,
+        text="Calculate",
+        command=calculate_threaded,
+        fg_color=["#3b8ed0", "#1f6aa5"],  # Gradient blue
+        hover_color="#2c7cd1",
+        font=ctk.CTkFont(size=14, weight="bold"),
+        height=40,
+        corner_radius=10
+    )
+    calc_button.pack(pady=(20, 10))
+
+    # Status label
+    status_label = ctk.CTkLabel(
+        main_frame,
+        text="Enter inputs and click Calculate.",
+        font=ctk.CTkFont(size=12),
+        wraplength=400,
+        justify="left"
+    )
+    status_label.pack(pady=(0, 10))
+
+    # Result label
+    result_label = ctk.CTkLabel(
+        main_frame,
+        text="Result will appear here after calculation.",
+        font=ctk.CTkFont(size=12),
+        text_color="black",
+        wraplength=400,
+        justify="left",
+        fg_color="#d0ebff",
+        corner_radius=10,
+        padx=10,
+        pady=10
+    )
+    result_label.pack(pady=(0, 20), fill="x", padx=20)
+
+    root.mainloop()

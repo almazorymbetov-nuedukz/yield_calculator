@@ -16,11 +16,19 @@ The core of the model is Multi-Layer Perceptron (MLP) with following functions:
 --------------------------------------------------------------------
 HOW TO RUN
 --------------------------------------------------------------------
-1. You need Python.
-2. Open terminal or command prompt.
-3. Run the script by typing: python main.py
-4. The script will automatically install any missing libraries.
-5. The model will train itself (creating .pth and .joblib files).
+1. You need Python (optional for .exe).
+2. For GUI: Run the script with python main.py or use the .exe file.
+3. The model will train itself automatically if files are missing.
+4. Use the modern interface to input values and calculate.
+
+--------------------------------------------------------------------
+EXE CREATION
+--------------------------------------------------------------------
+To create the .exe:
+- Install PyInstaller: pip install pyinstaller
+- Run: pyinstaller --onefile --windowed --clean --noconfirm --exclude-module matplotlib --exclude-module PIL --exclude-module torch.test --exclude-module sklearn.datasets --hidden-import=customtkinter --hidden-import=darkdetect main.py
+- Do not exclude `numpy.testing`; it is needed by SciPy/sklearn at runtime.
+- The .exe will be in dist/main.exe (~192MB due to PyTorch dependencies)
 
 --------------------------------------------------------------------
 INPUTS
