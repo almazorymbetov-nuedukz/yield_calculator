@@ -136,7 +136,7 @@ if __name__ == "__main__":
                     
                     root.after(0, update_ui)
                 except Exception as exc:
-                    def update_error():
+                    def update_error(exc=exc):
                         status_label.configure(text="Error occurred.", text_color="red")
                         calc_button.configure(state="normal")
                         messagebox.showerror("Prediction Error", str(exc))

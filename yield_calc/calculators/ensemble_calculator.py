@@ -3,12 +3,13 @@
 import os
 import torch
 import numpy as np
+import numpy._core.multiarray
 import pandas as pd
 from typing import Dict, Tuple, List
 import joblib
 
 from ..modules import YieldNet, YieldNetWithAttention, EnsembleYieldNet
-from ..data import FeatureEngineer, YieldConfig
+from ..data import FeatureEngineer, YieldConfig, QuantumReferences
 from ..tools import get_device, get_dtype
 
 
@@ -53,7 +54,8 @@ class EnsembleCalculator:
     
     def _load_model(self, model_path: str) -> Tuple[torch.nn.Module, YieldConfig]:
         """Load model from checkpoint"""
-        checkpoint = torch.load(model_path, map_location="cpu")
+        with torch.serialization.safe_globals([YieldConfig, QuantumReferences, numpy._core.multiarray._reconstruct]):
+            checkpoint = torch.load(model_path, map_location="cpu")
         
         config = checkpoint.get("config", YieldConfig())
         model_type = checkpoint.get("model_type", "standard")

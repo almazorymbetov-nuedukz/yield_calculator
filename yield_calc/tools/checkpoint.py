@@ -3,7 +3,10 @@
 import os
 import torch
 import json
+import numpy._core.multiarray
 from typing import Optional, Dict, Any
+
+from ..data import YieldConfig, QuantumReferences
 
 
 class CheckpointHandler:
@@ -62,7 +65,8 @@ class CheckpointHandler:
         if not os.path.exists(path):
             raise FileNotFoundError(f"Checkpoint not found: {path}")
         
-        checkpoint = torch.load(path, map_location="cpu")
+        with torch.serialization.safe_globals([YieldConfig, QuantumReferences, numpy._core.multiarray._reconstruct]):
+            checkpoint = torch.load(path, map_location="cpu")
         
         model.load_state_dict(checkpoint["model_state"])
         
@@ -96,7 +100,8 @@ class CheckpointHandler:
         if not os.path.exists(path):
             raise FileNotFoundError(f"Best model not found: {path}")
         
-        data = torch.load(path, map_location="cpu")
+        with torch.serialization.safe_globals([YieldConfig, QuantumReferences, numpy._core.multiarray._reconstruct]):
+            data = torch.load(path, map_location="cpu")
         model.load_state_dict(data["model_state"])
         print(f"Best model loaded: {path}")
         return data
