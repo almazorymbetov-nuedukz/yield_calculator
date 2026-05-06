@@ -125,19 +125,45 @@ class EnsembleCalculator:
         
         x_tensor = torch.FloatTensor(x).to(self.device)
         
-        # Get predictions from all models
+        # Get predictions from all models with MC dropout
         all_predictions = []
         
         for model in self.models:
-            # Multiple passes for uncertainty
-            for _ in range(50):
+            model.train()  # Enable dropout
+            model_predictions = []
+            for _ in range(50):  # 50 samples per model
                 pred = model(x_tensor).cpu().numpy()
-                all_predictions.append(pred)
+                model_predictions.append(pred)
+            model.eval()  # Restore eval mode
+            all_predictions.extend(model_predictions)
         
         all_predictions = np.array(all_predictions).squeeze()
         
-        # Compute statistics
+        # Compute ensemble statistics
         y_mean = np.mean(all_predictions)
+        y_std = np.std(all_predictions)
+        
+        # Inverse transform
+        if self.scalers["scaler_y"] is not None:
+            y_mean = self.scalers["scaler_y"].inverse_transform([[y_mean]])[0, 0]
+            y_std = y_std * self.scalers["scaler_y"].data_range_[0]
+        
+        # Compute residual glycerol and purity
+        res_gly = g * (1 - (y_mean / 100))
+        purity = 100.0 - res_gly
+        
+        return {
+            "yield": max(0, min(100, y_mean)),
+            "yield_std": y_std,
+            "yield_ci_95": 2 * y_std,
+            "residual_glycerol": max(0, res_gly),
+            "purity": max(0, purity),
+            "temperature": t,
+            "molar_ratio": r,
+            "density": d,
+            "viscosity": v,
+            "ensemble_size": len(self.models)
+        }
         y_std = np.std(all_predictions)
         y_median = np.median(all_predictions)
         y_min = np.percentile(all_predictions, 2.5)

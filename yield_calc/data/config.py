@@ -45,7 +45,7 @@ class YieldConfig:
     num_channels: int = 256
     num_layers: int = 4
     attention_heads: int = 8
-    dropout: float = 0.15
+    dropout: float = 0.25  # Increased from 0.15 for better uncertainty
     hidden_multiplier: int = 4  # For feedforward dimension in attention
     
     # Data normalization

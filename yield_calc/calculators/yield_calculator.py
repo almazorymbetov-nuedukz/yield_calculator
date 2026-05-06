@@ -133,7 +133,7 @@ class YieldCalculator:
         predictions = []
         self.model.train()  # Enable dropout for uncertainty estimation
         with torch.no_grad():
-            for _ in range(100):  # 100 stochastic passes with dropout
+            for _ in range(200):  # Increased from 100 to 200 for better statistics
                 pred = self.model(x_tensor)
                 predictions.append(pred.cpu().numpy())
         self.model.eval()  # Restore eval mode

@@ -1,8 +1,8 @@
-# Yield Calculator v2.0 - MACE-Inspired Architecture
+# Yield Calculator
 
 ## Overview
 
-Yield Calculator v2.0 is a complete restructuring of the original yield prediction system using an architecture inspired by **MACE** (Multi-Atomic Cluster Expansion). The project implements advanced machine learning algorithms with a modular, scalable design pattern.
+Yield Calculator is a complete restructuring of the original yield prediction system using an architecture inspired by **MACE** (Multi-Atomic Cluster Expansion). The project implements advanced machine learning algorithms with a modular, scalable design pattern.
 
 ## Key Improvements
 
