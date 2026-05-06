@@ -3,7 +3,6 @@
 import os
 import torch
 import numpy as np
-import numpy._core.multiarray
 import pandas as pd
 from typing import Dict, Tuple, Optional
 import joblib
@@ -53,8 +52,7 @@ class YieldCalculator:
     
     def _load_model(self, model_path: str) -> Tuple[torch.nn.Module, YieldConfig]:
         """Load model from checkpoint"""
-        with torch.serialization.safe_globals([YieldConfig, QuantumReferences, numpy._core.multiarray._reconstruct]):
-            checkpoint = torch.load(model_path, map_location="cpu")
+        checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
         
         # Load config
         config = checkpoint.get("config", YieldConfig())
@@ -131,11 +129,14 @@ class YieldCalculator:
         # Convert to tensor
         x_tensor = torch.FloatTensor(x).to(self.device)
         
-        # Make predictions with uncertainty
+        # Make predictions with uncertainty (enable dropout for MC dropout)
         predictions = []
-        for _ in range(100):  # 100 stochastic passes with dropout
-            pred = self.model(x_tensor)
-            predictions.append(pred.cpu().numpy())
+        self.model.train()  # Enable dropout for uncertainty estimation
+        with torch.no_grad():
+            for _ in range(100):  # 100 stochastic passes with dropout
+                pred = self.model(x_tensor)
+                predictions.append(pred.cpu().numpy())
+        self.model.eval()  # Restore eval mode
         
         predictions = np.array(predictions).squeeze()
         
@@ -145,8 +146,8 @@ class YieldCalculator:
         # Inverse transform output if scaler available
         if self.scalers["scaler_y"] is not None:
             y_avg = self.scalers["scaler_y"].inverse_transform([[y_avg]])[0, 0]
-            y_std_transformed = self.scalers["scaler_y"].inverse_transform([[y_std]])[0, 0]
-            y_std = abs(y_std_transformed - y_avg) if y_avg > 0 else y_std
+            # Correctly transform standard deviation back to original space
+            y_std = y_std * self.scalers["scaler_y"].data_range_[0]
         
         # Compute residual glycerol and purity
         res_gly = g * (1 - (y_avg / 100))

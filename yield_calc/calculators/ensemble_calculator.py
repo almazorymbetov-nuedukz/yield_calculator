@@ -3,7 +3,6 @@
 import os
 import torch
 import numpy as np
-import numpy._core.multiarray
 import pandas as pd
 from typing import Dict, Tuple, List
 import joblib
@@ -54,8 +53,7 @@ class EnsembleCalculator:
     
     def _load_model(self, model_path: str) -> Tuple[torch.nn.Module, YieldConfig]:
         """Load model from checkpoint"""
-        with torch.serialization.safe_globals([YieldConfig, QuantumReferences, numpy._core.multiarray._reconstruct]):
-            checkpoint = torch.load(model_path, map_location="cpu")
+        checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
         
         config = checkpoint.get("config", YieldConfig())
         model_type = checkpoint.get("model_type", "standard")

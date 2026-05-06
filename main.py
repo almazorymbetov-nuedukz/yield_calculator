@@ -26,14 +26,21 @@ def initialize_calculator(model_type: str = "attention"):
     """Initialize calculator with trained model"""
     global calculator
     
-    model_path = MODEL_ATTENTION if model_type == "attention" else MODEL_STANDARD
+    # Prioritize the properly trained model with config
+    primary_model = MODEL_ATTENTION if model_type == "attention" else MODEL_STANDARD
+    fallback_model = os.path.join(MODEL_DIR, "best_model.pt")
     
-    if not os.path.exists(model_path):
+    if os.path.exists(primary_model):
+        model_path = primary_model
+    elif os.path.exists(fallback_model):
+        model_path = fallback_model
+        print(f"Warning: Using fallback model {fallback_model}. Consider training with: python train.py --model_type {model_type}")
+    else:
         raise FileNotFoundError(
-            f"Model not found: {model_path}\n\n"
+            f"No trained model found.\n\n"
             f"Please train a model first by running:\n"
-            f"  python train.py --model_type {model_type}\n"
-            f"  python train.py --model_type attention (recommended)"
+            f"  python train.py --model_type {model_type} --train_file training_data.csv\n"
+            f"  python train.py --model_type attention --train_file training_data.csv (recommended)"
         )
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
