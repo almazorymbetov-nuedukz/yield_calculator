@@ -166,8 +166,11 @@ python train.py --model_type standard --num_epochs 2000
 
 ### Run Tests
 
-```bash
-python test_components.py
+
+
+
+
+
 ```
 
 ### Compare Models

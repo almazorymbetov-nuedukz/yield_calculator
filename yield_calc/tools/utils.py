@@ -1,5 +1,6 @@
 """Utility functions for training and model management"""
 
+import warnings
 import torch
 import numpy as np
 import random
@@ -19,6 +20,30 @@ def get_device(device: Optional[str] = None) -> torch.device:
     """Get torch device"""
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    if device == "cuda":
+        if not torch.cuda.is_available():
+            return torch.device("cpu")
+
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                cap = torch.cuda.get_device_capability(0)
+
+            supported_archs = set(torch.cuda.get_arch_list())
+            current_arch = f"sm_{cap[0]}{cap[1]}"
+            if current_arch not in supported_archs:
+                warnings.warn(
+                    f"CUDA device {current_arch} is not supported by this PyTorch build. "
+                    "Falling back to CPU. Install a PyTorch build with support for your GPU."
+                )
+                return torch.device("cpu")
+        except Exception:
+            warnings.warn(
+                "Unable to verify CUDA device capability. Falling back to CPU."
+            )
+            return torch.device("cpu")
+
     return torch.device(device)
 
 
