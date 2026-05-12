@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yield Calculator - Advanced ML Prediction</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Scientific color palette */
+            --primary: #1e3a5f;      /* Deep blue */
+            --secondary: #00897b;    /* Teal */
+            --accent: #d4a574;       /* Copper/Gold */
+            --light-bg: #f5f7fa;     /* Light bg */
+            --card-bg: #ffffff;      /* White cards */
+            --text-primary: #1a1a1a; /* Dark text */
+            --text-secondary: #666666;
+            --border: #e0e6ed;
+            --success: #2e7d32;
+            --error: #c62828;
+            --shadow: 0 2px 8px rgba(30, 58, 95, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2.5rem 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Info banner */
+        .info-banner {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--secondary);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .info-banner strong {
+            color: var(--secondary);
+        }
+
+        /* Main grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Form card */
+        .form-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .form-card h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-card h2::before {
+            content: '⚙️';
+            font-size: 1.3rem;
+        }
+
+        /* Form groups */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .label-info {
+            display: inline-block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: normal;
+            margin-left: 0.5rem;
+        }
+
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.1);
+        }
+
+        input[type="number"]::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .input-hint {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+        }
+
+        /* Results card */
+        .results-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            min-height: 100%;
+        }
+
+        .results-card h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .results-card h2::before {
+            content: '📊';
+            font-size: 1.3rem;
+        }
+
+        /* Result item */
+        .result-item {
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(0, 137, 123, 0.05) 0%, rgba(212, 165, 116, 0.05) 100%);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 0.5rem;
+        }
+
+        .result-unit {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: normal;
+        }
+
+        .result-uncertainty {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 0.95rem;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(30, 58, 95, 0.4);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--light-bg);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Status indicator */
+        .status {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status.show {
+            display: flex;
+        }
+
+        .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .status.loading {
+            background-color: #e3f2fd;
+            color: var(--primary);
+        }
+
+        .status.success {
+            background-color: #e8f5e9;
+            color: var(--success);
+        }
+
+        .status.error {
+            background-color: #ffebee;
+            color: var(--error);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 3px solid rgba(30, 58, 95, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Validation */
+        .error {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        input.invalid {
+            border-color: var(--error);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .result-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Advanced section */
+        .advanced-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-top: 2rem;
+        }
+
+        .advanced-section h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .advanced-section h3::before {
+            content: '🔬';
+            font-size: 1.1rem;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .feature-item {
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .feature-item strong {
+            color: var(--primary);
+        }
+
+        .feature-item p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+        }
+
+        @media (max-width: 768px) {
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 900px; margin: 0 auto;">
+            <div>
+                <h1 style="margin: 0;">Yield Calculator</h1>
+                <p style="margin: 0;">Advanced ML-based Prediction with Modular Architecture</p>
+            </div>
+            <a href="setup.html" style="background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">⚙️ Configure</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="info-banner">
+            <strong>💡 Tip:</strong> This calculator uses a trained transformer-based neural network to predict chemical yields. Enter the reaction parameters below and click "Calculate" to get predictions.
+        </div>
+
+        <div class="main-grid">
+            <!-- Form Card -->
+            <div class="form-card">
+                <h2>Input Parameters</h2>
+                <form id="yieldForm">
+                    <div class="form-group">
+                        <label for="temperature">
+                            Temperature (K)
+                            <span class="label-info">273-500</span>
+                        </label>
+                        <input type="number" id="temperature" name="temperature" 
+                               placeholder="e.g., 373" min="273" max="500" step="0.1" required>
+                        <div class="input-hint">Reaction temperature in Kelvin</div>
+                        <div class="error" id="error-temperature"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="molar_ratio">
+                            Molar Ratio
+                            <span class="label-info">≥ 0</span>
+                        </label>
+                        <input type="number" id="molar_ratio" name="molar_ratio" 
+                               placeholder="e.g., 1.5" min="0" step="0.01" required>
+                        <div class="input-hint">Molar ratio of reactants</div>
+                        <div class="error" id="error-molar_ratio"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="density">
+                            Density (g/cm³)
+                            <span class="label-info">0.1-5.0</span>
+                        </label>
+                        <input type="number" id="density" name="density" 
+                               placeholder="e.g., 0.85" min="0.1" max="5.0" step="0.01" required>
+                        <div class="input-hint">Reaction mixture density</div>
+                        <div class="error" id="error-density"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="viscosity">
+                            Viscosity (mPa·s)
+                            <span class="label-info">≥ 0</span>
+                        </label>
+                        <input type="number" id="viscosity" name="viscosity" 
+                               placeholder="e.g., 25.5" min="0" step="0.1" required>
+                        <div class="input-hint">Dynamic viscosity of mixture</div>
+                        <div class="error" id="error-viscosity"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="des_oil_ratio">
+                            DES/Oil Mass Ratio
+                            <span class="label-info">≥ 0</span>
+                        </label>
+                        <input type="number" id="des_oil_ratio" name="des_oil_ratio" 
+                               placeholder="e.g., 3.0" min="0" step="0.01" required>
+                        <div class="input-hint">Mass ratio of DES to oil</div>
+                        <div class="error" id="error-des_oil_ratio"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="water_percent">
+                            Water (%)
+                            <span class="label-info">0-100</span>
+                        </label>
+                        <input type="number" id="water_percent" name="water_percent" 
+                               placeholder="e.g., 5" min="0" max="100" step="0.1" required>
+                        <div class="input-hint">Water content percentage</div>
+                        <div class="error" id="error-water_percent"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="glycerol_initial">
+                            Initial Glycerol (%)
+                            <span class="label-info">0-100</span>
+                        </label>
+                        <input type="number" id="glycerol_initial" name="glycerol_initial" 
+                               placeholder="e.g., 2" min="0" max="100" step="0.1" required>
+                        <div class="input-hint">Initial glycerol content percentage</div>
+                        <div class="error" id="error-glycerol_initial"></div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary" id="submitBtn">Calculate Yield</button>
+                        <button type="reset" class="btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Card -->
+            <div class="results-card">
+                <h2>Results</h2>
+                <div class="status" id="status"></div>
+                <div id="resultsContainer">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📈</div>
+                        <div class="empty-state-text">Enter parameters and click "Calculate Yield" to see results</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Features -->
+        <div class="advanced-section">
+            <h3>Advanced Features</h3>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <strong>🤖 Transformer Architecture</strong>
+                    <p>Multi-head self-attention mechanism for superior feature learning</p>
+                </div>
+                <div class="feature-item">
+                    <strong>📊 Uncertainty Quantification</strong>
+                    <p>95% confidence intervals with ensemble predictions</p>
+                </div>
+                <div class="feature-item">
+                    <strong>🧠 26 Engineered Features</strong>
+                    <p>Thermodynamic, quantum, and interaction-based features</p>
+                </div>
+                <div class="feature-item">
+                    <strong>⚡ GPU Acceleration</strong>
+                    <p>Lightning-fast predictions with CUDA support</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Yield Calculator v2.0 | Powered by Advanced ML Architecture</p>
+        <p>Deploy this site from <a href="https://github.com" target="_blank">GitHub</a></p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('yieldForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusEl = document.getElementById('status');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        // Validation rules
+        const validationRules = {
+            temperature: { min: 273, max: 500, name: 'Temperature (K)' },
+            molar_ratio: { min: 0, name: 'Molar Ratio' },
+            density: { min: 0.1, max: 5.0, name: 'Density (g/cm³)' },
+            viscosity: { min: 0, name: 'Viscosity (mPa·s)' },
+            des_oil_ratio: { min: 0, name: 'DES/Oil Mass Ratio' },
+            water_percent: { min: 0, max: 100, name: 'Water (%)' },
+            glycerol_initial: { min: 0, max: 100, name: 'Initial Glycerol (%)' }
+        };
+
+        function validateField(fieldName) {
+            const field = document.getElementById(fieldName);
+            const errorEl = document.getElementById(`error-${fieldName}`);
+            const value = parseFloat(field.value);
+            const rules = validationRules[fieldName];
+
+            errorEl.textContent = '';
+            field.classList.remove('invalid');
+
+            if (!field.value) {
+                errorEl.textContent = `${rules.name} is required`;
+                field.classList.add('invalid');
+                return false;
+            }
+
+            if (isNaN(value)) {
+                errorEl.textContent = `${rules.name} must be a number`;
+                field.classList.add('invalid');
+                return false;
+            }
+
+            if (rules.min !== undefined && value < rules.min) {
+                errorEl.textContent = `${rules.name} must be at least ${rules.min}`;
+                field.classList.add('invalid');
+                return false;
+            }
+
+            if (rules.max !== undefined && value > rules.max) {
+                errorEl.textContent = `${rules.name} must be at most ${rules.max}`;
+                field.classList.add('invalid');
+                return false;
+            }
+
+            return true;
+        }
+
+        function showStatus(message, type = 'info') {
+            let icon = '⏳';
+            if (type === 'success') icon = '✓';
+            if (type === 'error') icon = '✕';
+
+            statusEl.className = `status show ${type}`;
+            if (type === 'loading') {
+                statusEl.innerHTML = `<div class="loading-spinner"></div><span>${message}</span>`;
+            } else {
+                statusEl.innerHTML = `<span class="status-icon">${icon}</span><span>${message}</span>`;
+            }
+        }
+
+        function displayResults(result) {
+            const html = `
+                <div class="result-item">
+                    <div class="result-label">Yield (%)</div>
+                    <div class="result-value">${result.yield.toFixed(2)}<span class="result-unit">%</span></div>
+                    <div class="result-uncertainty">± ${result.yield_ci_95.toFixed(2)}% (95% CI)</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Residual Glycerol</div>
+                    <div class="result-value">${result.residual_glycerol.toFixed(4)}<span class="result-unit">%</span></div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Purity</div>
+                    <div class="result-value">${result.purity.toFixed(4)}<span class="result-unit">%</span></div>
+                </div>
+            `;
+            resultsContainer.innerHTML = html;
+            showStatus('Calculation completed successfully!', 'success');
+        }
+
+        function displayError(message) {
+            resultsContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
+                    <div class="empty-state-text">${message}</div>
+                </div>
+            `;
+            showStatus(`Error: ${message}`, 'error');
+        }
+
+        async function submitForm(e) {
+            e.preventDefault();
+
+            // Validate all fields
+            const fields = Object.keys(validationRules);
+            let isValid = true;
+            for (const field of fields) {
+                if (!validateField(field)) {
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                showStatus('Please fix validation errors', 'error');
+                return;
+            }
+
+            // Prepare data
+            const formData = new FormData(form);
+            const data = {
+                t: parseFloat(formData.get('temperature')),
+                r: parseFloat(formData.get('molar_ratio')),
+                d: parseFloat(formData.get('density')),
+                v: parseFloat(formData.get('viscosity')),
+                m: parseFloat(formData.get('des_oil_ratio')),
+                w: parseFloat(formData.get('water_percent')),
+                g: parseFloat(formData.get('glycerol_initial'))
+            };
+
+            showStatus('Calculating yield...', 'loading');
+            submitBtn.disabled = true;
+
+            try {
+                // Try to reach backend
+                const backendUrl = localStorage.getItem('backendUrl') || 'http://localhost:5000';
+                
+                const response = await fetch(`${backendUrl}/api/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                displayResults(result);
+            } catch (error) {
+                displayError(`Unable to connect to backend. Make sure the server is running at the configured URL.`);
+                console.error('Fetch error:', error);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Add event listeners
+        form.addEventListener('submit', submitForm);
+
+        // Clear errors on input
+        Object.keys(validationRules).forEach(fieldName => {
+            const field = document.getElementById(fieldName);
+            field.addEventListener('blur', () => validateField(fieldName));
+            field.addEventListener('input', () => {
+                const errorEl = document.getElementById(`error-${fieldName}`);
+                if (errorEl.textContent) {
+                    validateField(fieldName);
+                }
+            });
+        });
+
+        // Reset results on form reset
+        form.addEventListener('reset', () => {
+            resultsContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📈</div>
+                    <div class="empty-state-text">Enter parameters and click "Calculate Yield" to see results</div>
+                </div>
+            `;
+            statusEl.className = 'status';
+            statusEl.textContent = '';
+        });
+    </script>
+</body>
+</html>
