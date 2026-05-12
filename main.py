@@ -8,7 +8,7 @@ import threading
 
 # Import from new modular structure
 from yield_calc.calculators import YieldCalculator, EnsembleCalculator
-from yield_calc.tools import set_random_seed
+from yield_calc.tools import set_random_seed, get_device
 
 # Model paths
 MODEL_DIR = "checkpoints"
@@ -43,8 +43,8 @@ def initialize_calculator(model_type: str = "attention"):
             f"  python train.py --model_type attention --train_file training_data.csv (recommended)"
         )
     
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    calculator = YieldCalculator(model_path, model_type=model_type, device=device)
+    device = get_device()
+    calculator = YieldCalculator(model_path, model_type=model_type, device=str(device))
 
 
 def train_and_save_model():
@@ -282,9 +282,10 @@ if __name__ == "__main__":
     info_frame = ctk.CTkFrame(main_frame, fg_color="#f5f5f5", corner_radius=10)
     info_frame.pack(pady=10, padx=20, fill="x")
     
+    device = get_device()
     info_label = ctk.CTkLabel(
         info_frame,
-        text="Model: Attention-based Neural Network | Device: " + ("GPU" if torch.cuda.is_available() else "CPU"),
+        text="Model: Attention-based Neural Network | Device: " + ("GPU" if device.type == "cuda" else "CPU"),
         font=ctk.CTkFont(size=10),
         text_color="gray"
     )
