@@ -345,6 +345,10 @@
             margin-top: 0.3rem;
         }
 
+        .error.warning {
+            color: #ff9800;
+        }
+
         input.invalid {
             border-color: var(--error);
         }
@@ -464,11 +468,11 @@
                     <div class="form-group">
                         <label for="temperature">
                             Temperature (K)
-                            <span class="label-info">273-500</span>
+                            <span class="label-info">296-378</span>
                         </label>
                         <input type="number" id="temperature" name="temperature" 
-                               placeholder="e.g., 373" min="273" max="500" step="0.1" required>
-                        <div class="input-hint">Reaction temperature in Kelvin</div>
+                               placeholder="e.g., 310" min="296" max="378" step="1" required>
+                        <div class="input-hint">Reaction temperature in Kelvin (typical: 310K)</div>
                         <div class="error" id="error-temperature"></div>
                     </div>
 
@@ -486,33 +490,33 @@
                     <div class="form-group">
                         <label for="density">
                             Density (g/cm³)
-                            <span class="label-info">0.1-5.0</span>
+                            <span class="label-info">0.8-1.4</span>
                         </label>
                         <input type="number" id="density" name="density" 
-                               placeholder="e.g., 0.85" min="0.1" max="5.0" step="0.01" required>
-                        <div class="input-hint">Reaction mixture density</div>
+                               placeholder="e.g., 1.18" min="0.8" max="1.4" step="0.01" required>
+                        <div class="input-hint">Reaction mixture density (typical: 1.18 g/cm³)</div>
                         <div class="error" id="error-density"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="viscosity">
                             Viscosity (mPa·s)
-                            <span class="label-info">≥ 0</span>
+                            <span class="label-info">10-1500</span>
                         </label>
                         <input type="number" id="viscosity" name="viscosity" 
-                               placeholder="e.g., 25.5" min="0" step="0.1" required>
-                        <div class="input-hint">Dynamic viscosity of mixture</div>
+                               placeholder="e.g., 300" min="10" max="1500" step="1" required>
+                        <div class="input-hint">Dynamic viscosity of mixture (typical: 300 mPa·s)</div>
                         <div class="error" id="error-viscosity"></div>
                     </div>
 
                     <div class="form-group">
                         <label for="des_oil_ratio">
                             DES/Oil Mass Ratio
-                            <span class="label-info">≥ 0</span>
+                            <span class="label-info">0.5-5.0</span>
                         </label>
                         <input type="number" id="des_oil_ratio" name="des_oil_ratio" 
-                               placeholder="e.g., 3.0" min="0" step="0.01" required>
-                        <div class="input-hint">Mass ratio of DES to oil</div>
+                               placeholder="e.g., 1.0" min="0.5" max="5.0" step="0.1" required>
+                        <div class="input-hint">Mass ratio of DES to oil (typical: 1.0)</div>
                         <div class="error" id="error-des_oil_ratio"></div>
                     </div>
 
@@ -530,11 +534,11 @@
                     <div class="form-group">
                         <label for="glycerol_initial">
                             Initial Glycerol (%)
-                            <span class="label-info">0-100</span>
+                            <span class="label-info">0.5-5.0</span>
                         </label>
                         <input type="number" id="glycerol_initial" name="glycerol_initial" 
-                               placeholder="e.g., 2" min="0" max="100" step="0.1" required>
-                        <div class="input-hint">Initial glycerol content percentage</div>
+                               placeholder="e.g., 1.5" min="0.5" max="5.0" step="0.1" required>
+                        <div class="input-hint">Initial glycerol content percentage (typical: 1.5%)</div>
                         <div class="error" id="error-glycerol_initial"></div>
                     </div>
 
@@ -593,15 +597,26 @@
         const statusEl = document.getElementById('status');
         const resultsContainer = document.getElementById('resultsContainer');
 
+        // Typical ranges for warnings
+        const typicalRanges = {
+            temperature: { min: 296, max: 335, name: 'Temperature (K)' },
+            molar_ratio: { min: 1.0, max: 4.0, name: 'Molar Ratio' },
+            density: { min: 1.14, max: 1.25, name: 'Density (g/cm³)' },
+            viscosity: { min: 36, max: 1645, name: 'Viscosity (mPa·s)' },
+            des_oil_ratio: { min: 0.05, max: 0.20, name: 'DES/Oil Mass Ratio' },
+            water_percent: { min: 0.05, max: 5.0, name: 'Water (%)' },
+            glycerol_initial: { min: 0.44, max: 0.80, name: 'Initial Glycerol (%)' }
+        };
+
         // Validation rules
         const validationRules = {
-            temperature: { min: 273, max: 500, name: 'Temperature (K)' },
-            molar_ratio: { min: 0, name: 'Molar Ratio' },
-            density: { min: 0.1, max: 5.0, name: 'Density (g/cm³)' },
-            viscosity: { min: 0, name: 'Viscosity (mPa·s)' },
-            des_oil_ratio: { min: 0, name: 'DES/Oil Mass Ratio' },
-            water_percent: { min: 0, max: 100, name: 'Water (%)' },
-            glycerol_initial: { min: 0, max: 100, name: 'Initial Glycerol (%)' }
+            temperature: { min: 296, max: 378, name: 'Temperature (K)' },
+            molar_ratio: { min: 1.0, max: 4.0, name: 'Molar Ratio' },
+            density: { min: 0.8, max: 1.4, name: 'Density (g/cm³)' },
+            viscosity: { min: 10, max: 1500, name: 'Viscosity (mPa·s)' },
+            des_oil_ratio: { min: 0.5, max: 5.0, name: 'DES/Oil Mass Ratio' },
+            water_percent: { min: 0.05, max: 5.0, name: 'Water (%)' },
+            glycerol_initial: { min: 0.5, max: 5.0, name: 'Initial Glycerol (%)' }
         };
 
         function validateField(fieldName) {
@@ -611,6 +626,7 @@
             const rules = validationRules[fieldName];
 
             errorEl.textContent = '';
+            errorEl.classList.remove('warning');
             field.classList.remove('invalid');
 
             if (!field.value) {
@@ -635,6 +651,14 @@
                 errorEl.textContent = `${rules.name} must be at most ${rules.max}`;
                 field.classList.add('invalid');
                 return false;
+            }
+
+            // Check if outside typical training range
+            const typical = typicalRanges[fieldName];
+            if (typical && (value < typical.min || value > typical.max)) {
+                errorEl.textContent = `⚠️ ${rules.name} is outside typical training range (${typical.min}-${typical.max}). Prediction may be unreliable.`;
+                errorEl.classList.add('warning');
+                return true; // Allow but warn
             }
 
             return true;
