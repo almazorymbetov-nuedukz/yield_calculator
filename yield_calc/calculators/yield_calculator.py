@@ -125,6 +125,11 @@ class YieldCalculator:
         # Normalize if scaler available
         if self.scalers["scaler_x"] is not None:
             x = self.scalers["scaler_x"].transform(x)
+        else:
+            raise RuntimeError(
+                f"Missing input scaler for model '{model_path}'. "
+                "Please ensure the corresponding *_scalers.joblib file is present."
+            )
         
         # Convert to tensor
         x_tensor = torch.FloatTensor(x).to(self.device)
@@ -148,6 +153,10 @@ class YieldCalculator:
             y_avg = self.scalers["scaler_y"].inverse_transform([[y_avg]])[0, 0]
             # Correctly transform standard deviation back to original space
             y_std = y_std * self.scalers["scaler_y"].data_range_[0]
+        else:
+            # Fallback when scaler is missing: model outputs [0, 1]
+            y_avg = float(y_avg) * 100.0
+            y_std = float(y_std) * 100.0
         
         # Compute residual glycerol and purity
         res_gly = g * (1 - (y_avg / 100))

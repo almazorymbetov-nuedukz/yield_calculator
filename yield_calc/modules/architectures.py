@@ -37,7 +37,7 @@ class YieldNet(nn.Module):
             nn.Mish(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim // 2, output_dim),
-            nn.Sigmoid()  # Yield bounded [0, 100]
+            nn.Sigmoid()  # Yield bounded [0, 1]
         )
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -45,7 +45,7 @@ class YieldNet(nn.Module):
         x = self.input_proj(x)
         x = self.res_blocks(x)
         x = self.output_proj(x)
-        return x * 100  # Scale to [0, 100]
+        return x
 
 
 class YieldNetWithAttention(nn.Module):
@@ -131,7 +131,7 @@ class YieldNetWithAttention(nn.Module):
         x = self.norm(x)
         x = self.head(x)
         
-        return x * 100  # Scale to [0, 100]
+        return x
 
 
 class EnsembleYieldNet(nn.Module):
@@ -245,4 +245,4 @@ class HybridYieldNet(nn.Module):
             x = block(x)
         
         x = self.output(x)
-        return x * 100  # Scale to [0, 100]
+        return x
