@@ -85,12 +85,13 @@ Ret<!DOCTYPE html>
         }
 
         .header-btn.configure {
-            background: var(--accent);
-            color: var(--primary);
+            background: rgba(255,255,255,0.2);
+            color: white;
         }
 
         .header-btn.configure:hover {
-            background: #e6b87a;
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
         }
 
         header h1 {
@@ -464,7 +465,7 @@ Ret<!DOCTYPE html>
                 <i class="fas fa-link"></i> References
             </a>
             <a href="setup.html" class="header-btn configure" title="Configure Backend">
-                Configure
+                <i class="fas fa-cog"></i> Configure
             </a>
         </div>
     </header>
@@ -660,9 +661,9 @@ Ret<!DOCTYPE html>
         }
 
         function showStatus(message, type = 'info') {
-            let icon = '⏳';
-            if (type === 'success') icon = '✓';
-            if (type === 'error') icon = '✕';
+            let icon = '';
+            if (type === 'success') icon = '';
+            if (type === 'error') icon = '';
 
             statusEl.className = `status show ${type}`;
             if (type === 'loading') {

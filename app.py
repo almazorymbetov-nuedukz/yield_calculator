@@ -3,6 +3,7 @@
 import os
 import torch
 import json
+import logging
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from yield_calc.calculators import YieldCalculator
@@ -15,6 +16,15 @@ CORS(app)
 MODEL_DIR = "checkpoints"
 MODEL_ATTENTION = os.path.join(MODEL_DIR, "yield_model_attention.pt")
 FALLBACK_MODEL = os.path.join(MODEL_DIR, "best_model.pt")
+LOG_FILE = "prediction.log"
+
+# Configure logging for prediction requests
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 # Global calculator instance
 calculator = None
@@ -37,9 +47,11 @@ def initialize_calculator():
     try:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         calculator = YieldCalculator(model_path, model_type=model_type, device=device)
+        logging.info(f"Calculator initialized with model={model_path}, device={device}")
         return True
     except Exception as e:
         print(f"Error initializing calculator: {e}")
+        logging.error(f"Calculator initialization failed: {e}")
         return False
 
 
@@ -73,11 +85,13 @@ def predict():
     
     try:
         data = request.get_json()
+        logging.info(f"Prediction request payload: {json.dumps(data)}")
         
         # Validate inputs
         required_fields = ['t', 'r', 'd', 'v', 'm', 'w', 'g']
         for field in required_fields:
             if field not in data:
+                logging.warning(f"Missing field in payload: {field}")
                 return jsonify({'error': f'Missing field: {field}'}), 400
         
         # Extract parameters
@@ -88,6 +102,8 @@ def predict():
         m = float(data['m'])  # DES/Oil Mass Ratio
         w = float(data['w'])  # Water
         g = float(data['g'])  # Glycerol
+        input_data = {'t': t, 'r': r, 'd': d, 'v': v, 'm': m, 'w': w, 'g': g}
+        logging.info(f"Validated input parameters: {json.dumps(input_data)}")
         
         # Validate ranges
         if not (273 <= t <= 500):
@@ -103,13 +119,17 @@ def predict():
         result = calculator.predict(t, r, d, v, m, w, g)
         
         if result is None:
+            logging.error("Prediction failed: calculator returned None")
             return jsonify({'error': 'Prediction failed'}), 500
         
+        logging.info(f"Prediction result: {json.dumps(result)}")
         return jsonify(result)
     
     except ValueError as e:
+        logging.warning(f"Invalid input: {e}")
         return jsonify({'error': f'Invalid input: {str(e)}'}), 400
     except Exception as e:
+        logging.error(f"Prediction error: {e}")
         print(f"Prediction error: {e}")
         return jsonify({'error': f'Prediction error: {str(e)}'}), 500
 
