@@ -1,5 +1,18 @@
 # Yield Calculator
 
+**Advanced ML-based Yield Prediction System**  
+*Modular Architecture Inspired by MACE*
+
+## Quick Links
+
+| Link | Purpose |
+|------|---------|
+| [Render.com](https://render.com) | Deploy backend for free |
+| [GitHub](https://github.com) | Push code and collaborate |
+| [PyTorch](https://pytorch.org) | Deep learning framework |
+| [Flask](https://flask.palletsprojects.com) | Web framework |
+| [MACE Paper](https://arxiv.org/abs/2206.07697) | Research inspiration |
+
 ## Overview
 
 Yield Calculator is a complete restructuring of the original yield prediction system using an architecture inspired by **MACE** (Multi-Atomic Cluster Expansion). The project implements advanced machine learning algorithms with a modular, scalable design pattern.
@@ -164,25 +177,210 @@ python train.py --model_type attention --num_epochs 2000 --batch_size 32
 python train.py --model_type standard --num_epochs 2000
 ```
 
-### Run Tests
+### Start Flask Server
 
+```bash
+# Install dependencies (if not already done)
+pip install -r requirements-app.txt
 
-
-
-
-
+# Start the backend server
+python app.py
 ```
 
-### Compare Models
+Server will run on `http://localhost:5000`
+
+### Web Interface
+
+There are two HTML-based interfaces available:
+
+#### Full Calculator Interface (Recommended)
+Open `index.html` in your browser:
+- Modern, responsive design
+- Real-time input validation  
+- Parameter guidance with safe ranges
+- Automatic backend connection
+- Results with uncertainty estimates
+- One-click deployment info
+
+#### Setup & Configuration Interface
+Open `setup.html` in your browser:
+- Configure backend server URL
+- Test backend connection
+- View health status
+- Deployment guides for Render.com, Heroku
+
+### REST API Endpoints
+
+#### Health Check
+```bash
+GET /api/health
+```
+Returns model status and available device (CPU/CUDA)
+
+#### Make Prediction
+```bash
+POST /api/predict
+Content-Type: application/json
+
+{
+  "t": 315.15,    # Temperature (K) [273-500]
+  "r": 2.0,       # Molar Ratio [0-10]
+  "d": 1.18,      # Density (g/cm³) [0.6-2.0]
+  "v": 259,       # Viscosity (mPa·s) [0-2000]
+  "m": 0.1,       # DES/Oil Mass Ratio [0-1]
+  "w": 0.05,      # Water (%) [0-100]
+  "g": 0.8        # Initial Glycerol (%) [0-100]
+}
+```
+
+Response:
+```json
+{
+  "yield": 75.43,
+  "yield_std": 2.15,
+  "yield_ci_95": 4.30,
+  "residual_glycerol": 0.197,
+  "purity": 99.803
+}
+```
+
+#### Model Information
+```bash
+GET /api/info
+```
+Returns model details, feature names, and parameter ranges
+
+### Run Tests
+
+```bash
+python test_components.py
+```
+
+Validates all components including model forward passes, training loop, checkpointing.
+
+### Verify Installation
+
+```bash
+python check_setup.py
+```
+
+Verifies dependencies, model files, and provides quick testing URLs.
+
+### Compare Model Architectures
 
 ```bash
 python demo_train.py
 ```
 
-### GUI
+Trains both Standard and Attention models for performance comparison.
+
+### Desktop GUI
 
 ```bash
 python main.py
+```
+
+Launches standalone GUI application (requires customtkinter).
+
+## Deployment Guide
+
+### Development Environment
+
+1. **Backend (Terminal 1):**
+   ```bash
+   python app.py
+   ```
+
+2. **Frontend (Any Browser):**
+   - Open `file:///path/to/index.html` (full calculator)
+   - Or open `file:///path/to/setup.html` (configuration)
+
+Both interfaces automatically detect `http://localhost:5000`
+
+### Production Deployment
+
+#### Option A: Render.com (Recommended, Free Tier)
+
+1. Push code to GitHub
+2. Sign up at [https://render.com](https://render.com)
+3. Create new **Web Service**:
+   - Connect GitHub repository
+   - **Build Command:** `pip install -r requirements-app.txt`
+   - **Start Command:** `gunicorn app:app --bind 0.0.0.0:$PORT`
+4. Deploy and get your URL: `https://your-service-name.onrender.com`
+5. Update frontend to use your deployed URL
+
+#### Option B: Heroku (Paid, $7+/month)
+
+```bash
+heroku login
+heroku create your-yield-calculator
+git push heroku main
+heroku open
+```
+
+#### Option C: AWS, Google Cloud, Azure
+Use `Procfile` as reference and deploy as standard Python Flask app.
+
+### Security Recommendations
+
+Before deploying to production:
+- [ ] Remove `requirements-app.txt` from git (use `requirements.txt` only)
+- [ ] Set `debug=False` in production
+- [ ] Use HTTPS only for production URLs
+- [ ] Implement rate limiting on `/api/predict`
+- [ ] Add authentication if accessing sensitive data
+- [ ] Monitor logs for errors
+- [ ] Keep dependencies updated: `pip install --upgrade -r requirements-app.txt`
+
+## Security & Repository Hygiene
+
+### Protected Files
+The following files are excluded from version control (see `.gitignore`):
+- `*.joblib` - Trained scaler objects
+- `*.pt` - Model weights
+- `*.csv` - Training data
+- `.env` - Environment variables
+- `*.spec` - PyInstaller specs
+- `build/`, `dist/` - Build artifacts
+
+### Best Practices
+1. **Never commit:**
+   - API keys, tokens, or secrets
+   - Personal training data
+   - Model checkpoints (use `.gitignore`)
+   - IDE configuration files
+
+2. **Before public deployment:**
+   - Review all code for hardcoded secrets
+   - Set `FLASK_ENV=production`
+   - Use environment variables for configuration
+   - Enable HTTPS on production domains
+
+3. **Data Privacy:**
+   - Training data should be kept private
+   - Model files can be shared but exclude large checkpoints
+   - Use `.gitignore` to prevent accidental commits
+
+### Configuration via Environment Variables
+
+```bash
+# .env (not tracked by git)
+FLASK_ENV=production
+FLASK_DEBUG=0
+MODEL_PATH=checkpoints/yield_model_attention.pt
+PORT=5000
+CORS_ORIGINS=https://yourdomain.com
+```
+
+Load in your application:
+```python
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+model_path = os.getenv('MODEL_PATH', 'checkpoints/yield_model_attention.pt')
+port = int(os.getenv('PORT', 5000))
 ```
 
 ## Performance Metrics
@@ -262,3 +460,46 @@ MIT License - See LICENSE file for details
 ## Contact
 
 For issues, feature requests, or contributions, please open an issue in the repository.
+
+## Support & Resources
+
+### Documentation
+- [PyTorch Docs](https://pytorch.org/docs/stable/index.html)
+- [Flask Documentation](https://flask.palletsprojects.com/)
+- [Render Deployment Guide](https://render.com/docs)
+- [MACE Repository](https://github.com/ACEsuit/mace)
+
+### Deployment Platforms
+- **Render.com** (Free tier): https://render.com
+- **Heroku** (Paid): https://heroku.com
+- **AWS EC2** (Pay-as-you-go): https://aws.amazon.com
+- **Google Cloud Run** (Serverless): https://cloud.google.com/run
+
+### Development Tools
+- **Python Package Manager**: `pip install -r requirements-app.txt`
+- **Virtual Environment**: `python -m venv .venv`
+- **Testing**: `python test_components.py`
+- **GUI**: `python main.py`
+
+## Changelog
+
+### v2.0 (Current)
+- ✅ Fixed model output scaling (7% → accurate yields)
+- ✅ Modular architecture with MACE-inspired design
+- ✅ Transformer-based attention models
+- ✅ REST API with Flask
+- ✅ Web interface with HTML/JS
+- ✅ Comprehensive deployment guides
+
+### v1.0
+- Initial yield calculator with basic architecture
+
+## License
+
+MIT License - See LICENSE file for details. Feel free to use, modify, and distribute.
+
+---
+
+**Last Updated:** May 2026  
+**Maintainer**: Yield Calculator Team  
+**Status**: Production Ready ✅

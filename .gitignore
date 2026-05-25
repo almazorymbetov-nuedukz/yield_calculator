@@ -1,9 +1,77 @@
+# Virtual environments
 .venv/
+venv/
+env/
+ENV/
+.env
+.env.local
+.env.*.local
+
+# Python
 __pycache__/
-*.pth
-*.joblib
-.vscode/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
 dist/
 build/
-*.exe
-*.pkg
+
+# ML/Data
+*.joblib
+*.pkl
+*.pickle
+*.pth
+*.pt
+scalers.joblib
+training_data.csv
+*.csv  # Training data should be managed separately
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Sensitive files
+.env
+.env.*
+secrets.json
+config.json
+credentials.json
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+logs/
+*.cache
+
+# Sensitive build artifacts
+main.spec
+
+# Development
+.sixth/
