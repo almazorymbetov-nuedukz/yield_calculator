@@ -37,7 +37,7 @@ class YieldNet(nn.Module):
             nn.Mish(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim // 2, output_dim),
-            nn.Sigmoid()  # Yield bounded [0, 1]
+            # Regression output - no sigmoid to allow unconstrained prediction in scaled space
         )
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -91,7 +91,7 @@ class YieldNetWithAttention(nn.Module):
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim // 2, output_dim),
-            nn.Sigmoid()
+            # Regression output - no sigmoid
         )
         
         self._init_weights()
@@ -234,7 +234,7 @@ class HybridYieldNet(nn.Module):
             nn.Linear(current_dim, hidden_dim // 2),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim // 2, output_dim),
-            nn.Sigmoid()
+            # Regression output - no sigmoid
         )
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:

@@ -175,7 +175,8 @@ def train_model(args):
         device=str(device),
     )
     
-    trainer = Trainer(model, training_config)
+    # Use Smooth L1 (Huber-like) loss for robust regression instead of MSE
+    trainer = Trainer(model, training_config, loss_fn=torch.nn.SmoothL1Loss())
     
     try:
         history = trainer.train(train_loader, val_loader)
