@@ -8,7 +8,7 @@
 | Link | Purpose |
 |------|---------|
 | [Render.com](https://render.com) | Deploy backend for free |
-| [GitHub](https://github.com) | Push code and collaborate |
+| [GitHub](https://github.com/almazorymbetov-nuedukz/yield_calculator) | Push code and collaborate |
 | [PyTorch](https://pytorch.org) | Deep learning framework |
 | [Flask](https://flask.palletsprojects.com) | Web framework |
 | [MACE Paper](https://arxiv.org/abs/2206.07697) | Research inspiration |

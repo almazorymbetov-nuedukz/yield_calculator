@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Ret<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -28,7 +28,7 @@
         }
 
         body {
-            font-family: 'Georgia', 'Times New Roman', serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: var(--light-bg);
             color: var(--text-primary);
             line-height: 1.6;
@@ -108,9 +108,9 @@
 
         /* Main container */
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 2rem auto;
-            padding: 0 1rem;
+            padding: 0 1.5rem;
         }
 
         /* Info banner */
@@ -131,7 +131,7 @@
         /* Main grid */
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: minmax(360px, 1.2fr) minmax(360px, 0.8fr);
             gap: 2rem;
             margin-bottom: 2rem;
         }
@@ -149,14 +149,10 @@
             font-size: 1.5rem;
             margin-bottom: 1.5rem;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
 
         .form-card h2::before {
-            content: '⚙️';
-            font-size: 1.3rem;
+            content: '';
         }
 
         /* Form groups */
@@ -222,14 +218,10 @@
             font-size: 1.5rem;
             margin-bottom: 1.5rem;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
 
         .results-card h2::before {
-            content: '📊';
-            font-size: 1.3rem;
+            content: '';
         }
 
         /* Result item */
@@ -462,7 +454,7 @@
             <p>Advanced Transformer-Based ML Prediction System</p>
         </div>
         <div class="header-buttons">
-            <a href="https://github.com" target="_blank" class="header-btn" title="Visit GitHub Repository">
+            <a href="https://github.com/almazorymbetov-nuedukz/yield_calculator" target="_blank" class="header-btn" title="Visit GitHub Repository">
                 <i class="fab fa-github"></i> GitHub
             </a>
             <a href="readme.html" class="header-btn" title="View Project Documentation">
@@ -472,14 +464,14 @@
                 <i class="fas fa-link"></i> References
             </a>
             <a href="setup.html" class="header-btn configure" title="Configure Backend">
-                ⚙️ Configure
+                Configure
             </a>
         </div>
     </header>
 
     <div class="container">
         <div class="info-banner">
-            <strong>💡 Tip:</strong> This calculator uses a trained transformer-based neural network to predict biodiesel yields. Enter the reaction parameters below and click "Calculate" to get predictions.
+            <strong>Tip:</strong> This calculator uses a trained transformer-based neural network to predict biodiesel yields. Enter the reaction parameters below and click "Calculate" to get predictions.
         </div>
 
         <div class="main-grid">
@@ -577,7 +569,7 @@
                 <div class="status" id="status"></div>
                 <div id="resultsContainer">
                     <div class="empty-state">
-                        <div class="empty-state-icon">📈</div>
+                        <div class="empty-state-icon"></div>
                         <div class="empty-state-text">Enter parameters and click "Calculate Yield" to see results</div>
                     </div>
                 </div>
@@ -606,7 +598,7 @@
             molar_ratio: { min: 1.0, max: 4.0, name: 'Molar Ratio' },
             density: { min: 1.14, max: 1.25, name: 'Density (g/cm³)' },
             viscosity: { min: 36, max: 1645, name: 'Viscosity (mPa·s)' },
-            des_oil_ratio: { min: 0.05, max: 0.20, name: 'DES/Oil Mass Ratio' },
+            des_oil_ratio: { min: 0.5, max: 5.0, name: 'DES/Oil Mass Ratio' },
             water_percent: { min: 0.05, max: 5.0, name: 'Water (%)' },
             glycerol_initial: { min: 0.44, max: 0.80, name: 'Initial Glycerol (%)' }
         };
@@ -659,7 +651,7 @@
             // Check if outside typical training range
             const typical = typicalRanges[fieldName];
             if (typical && (value < typical.min || value > typical.max)) {
-                errorEl.textContent = `⚠️ ${rules.name} is outside typical training range (${typical.min}-${typical.max}). Prediction may be unreliable.`;
+                errorEl.textContent = `${rules.name} is outside typical training range (${typical.min}-${typical.max}). Prediction may be unreliable.`;
                 errorEl.classList.add('warning');
                 return true; // Allow but warn
             }
@@ -703,7 +695,7 @@
         function displayError(message) {
             resultsContainer.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state-icon">⚠️</div>
+                    <div class="empty-state-icon"></div>
                     <div class="empty-state-text">${message}</div>
                 </div>
             `;
@@ -788,7 +780,7 @@
         form.addEventListener('reset', () => {
             resultsContainer.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state-icon">📈</div>
+                    <div class="empty-state-icon"></div>
                     <div class="empty-state-text">Enter parameters and click "Calculate Yield" to see results</div>
                 </div>
             `;

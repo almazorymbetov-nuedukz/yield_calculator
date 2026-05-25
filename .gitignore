@@ -47,6 +47,7 @@ build/
 scalers.joblib
 training_data.csv
 *.csv  # Training data should be managed separately
+checkpoints/
 
 # IDE
 .vscode/
