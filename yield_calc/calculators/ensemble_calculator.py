@@ -127,7 +127,7 @@ class EnsembleCalculator:
         
         # Get predictions from all models with MC dropout
         all_predictions = []
-        
+
         for model in self.models:
             model.train()  # Enable dropout
             model_predictions = []
@@ -136,28 +136,35 @@ class EnsembleCalculator:
                 model_predictions.append(pred)
             model.eval()  # Restore eval mode
             all_predictions.extend(model_predictions)
-        
-        all_predictions = np.array(all_predictions).squeeze()
-        
-        # Compute ensemble statistics
-        y_mean = np.mean(all_predictions)
-        y_std = np.std(all_predictions)
-        
-        # Inverse transform
+
+        all_predictions = np.array(all_predictions)  # [n_preds, batch, 1]
+
+        # Inverse-transform predictions to original units when possible
         if self.scalers["scaler_y"] is not None:
-            y_mean = self.scalers["scaler_y"].inverse_transform([[y_mean]])[0, 0]
-            y_std = y_std * self.scalers["scaler_y"].data_range_[0]
-        
-        # Compute residual glycerol and purity
-        res_gly = g * (1 - (y_mean / 100))
-        purity = 100.0 - res_gly
-        
+            preds_scaled = all_predictions.reshape(all_predictions.shape[0], -1)
+            preds_orig = self.scalers["scaler_y"].inverse_transform(preds_scaled).squeeze()
+        else:
+            preds_orig = all_predictions.squeeze() * 100.0
+
+        # Compute ensemble statistics in original units
+        y_mean = float(np.mean(preds_orig))
+        y_std = float(np.std(preds_orig))
+
+        # Compute residual glycerol and purity. Handle G units robustly (fraction 0-1 or percent >1).
+        g_frac = (g / 100.0) if (g is not None and g > 1.0) else g
+        if g_frac is None:
+            g_frac = 0.0
+
+        residual_frac = g_frac * (1.0 - (y_mean / 100.0))
+        residual_percent = max(0.0, residual_frac * 100.0)
+        purity_percent = max(0.0, (1.0 - residual_frac) * 100.0)
+
         return {
-            "yield": max(0, min(100, y_mean)),
+            "yield": max(0.0, min(100.0, y_mean)),
             "yield_std": y_std,
-            "yield_ci_95": 2 * y_std,
-            "residual_glycerol": max(0, res_gly),
-            "purity": max(0, purity),
+            "yield_ci_95": 2.0 * y_std,
+            "residual_glycerol_percent": residual_percent,
+            "purity_percent": purity_percent,
             "temperature": t,
             "molar_ratio": r,
             "density": d,

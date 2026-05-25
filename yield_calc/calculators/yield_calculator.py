@@ -127,7 +127,7 @@ class YieldCalculator:
             x = self.scalers["scaler_x"].transform(x)
         else:
             raise RuntimeError(
-                f"Missing input scaler for model '{model_path}'. "
+                f"Missing input scaler for model '{self.model_path}'. "
                 "Please ensure the corresponding *_scalers.joblib file is present."
             )
         
@@ -143,31 +143,37 @@ class YieldCalculator:
                 predictions.append(pred.cpu().numpy())
         self.model.eval()  # Restore eval mode
         
-        predictions = np.array(predictions).squeeze()
-        
-        y_avg = np.mean(predictions)
-        y_std = np.std(predictions)
-        
-        # Inverse transform output if scaler available
+        # Convert list of prediction arrays to numpy array: [n_samples, batch, 1]
+        predictions = np.array(predictions)
+
+        # For uncertainty, inverse-transform each sample to original units when possible
         if self.scalers["scaler_y"] is not None:
-            y_avg = self.scalers["scaler_y"].inverse_transform([[y_avg]])[0, 0]
-            # Correctly transform standard deviation back to original space
-            y_std = y_std * self.scalers["scaler_y"].data_range_[0]
+            # reshape to (n_samples, 1) for scaler
+            preds_scaled = predictions.reshape(predictions.shape[0], -1)
+            preds_orig = self.scalers["scaler_y"].inverse_transform(preds_scaled)
+            preds_orig = preds_orig.squeeze()
         else:
-            # Fallback when scaler is missing: model outputs [0, 1]
-            y_avg = float(y_avg) * 100.0
-            y_std = float(y_std) * 100.0
+            preds_orig = predictions.squeeze() * 100.0
+
+        # Compute mean and std in original units
+        y_avg = float(np.mean(preds_orig))
+        y_std = float(np.std(preds_orig))
         
-        # Compute residual glycerol and purity
-        res_gly = g * (1 - (y_avg / 100))
-        purity = 100.0 - res_gly
-        
+        # Compute residual glycerol and purity. Handle G units robustly (fraction 0-1 or percent >1).
+        g_frac = (g / 100.0) if (g is not None and g > 1.0) else g
+        if g_frac is None:
+            g_frac = 0.0
+
+        residual_frac = g_frac * (1.0 - (y_avg / 100.0))
+        residual_percent = max(0.0, residual_frac * 100.0)
+        purity_percent = max(0.0, (1.0 - residual_frac) * 100.0)
+
         result = {
-            "yield": max(0, min(100, y_avg)),
+            "yield": max(0.0, min(100.0, y_avg)),
             "yield_std": y_std,
-            "yield_ci_95": 2 * y_std,
-            "residual_glycerol": max(0, res_gly),
-            "purity": max(0, purity),
+            "yield_ci_95": 2.0 * y_std,
+            "residual_glycerol_percent": residual_percent,
+            "purity_percent": purity_percent,
             "temperature": t,
             "molar_ratio": r,
             "density": d,
