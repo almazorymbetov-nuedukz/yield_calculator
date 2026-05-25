@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yield Calculator - Advanced ML Prediction</title>
+    <title>Biodiesel Yield Calculator - ML Prediction System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -27,7 +28,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Georgia', 'Times New Roman', serif;
             background-color: var(--light-bg);
             color: var(--text-primary);
             line-height: 1.6;
@@ -45,8 +46,51 @@
         header {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             padding: 2.5rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-content {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .header-btn.configure {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .header-btn.configure:hover {
+            background: #e6b87a;
         }
 
         header h1 {
@@ -144,7 +188,7 @@
             border-radius: 6px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            font-family: inherit;
+            font-family: 'Georgia', 'Times New Roman', serif;
         }
 
         input[type="number"]:focus,
@@ -372,8 +416,25 @@
             text-decoration: underline;
         }
 
+        .footer-divider {
+            margin: 0.5rem 0;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            padding-top: 0.5rem;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-buttons {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
             header h1 {
                 font-size: 2rem;
             }
@@ -391,73 +452,34 @@
             }
         }
 
-        /* Advanced section */
-        .advanced-section {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: var(--shadow);
-            margin-top: 2rem;
-        }
 
-        .advanced-section h3 {
-            color: var(--primary);
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .advanced-section h3::before {
-            content: '🔬';
-            font-size: 1.1rem;
-        }
-
-        .feature-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .feature-item {
-            padding: 1rem;
-            background: var(--light-bg);
-            border-radius: 6px;
-            border-left: 3px solid var(--accent);
-        }
-
-        .feature-item strong {
-            color: var(--primary);
-        }
-
-        .feature-item p {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-top: 0.3rem;
-        }
-
-        @media (max-width: 768px) {
-            .feature-list {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 <body>
     <header>
-        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 900px; margin: 0 auto;">
-            <div>
-                <h1 style="margin: 0;">Yield Calculator</h1>
-                <p style="margin: 0;">Advanced ML-based Prediction with Modular Architecture</p>
-            </div>
-            <a href="setup.html" style="background: rgba(255,255,255,0.2); color: white; padding: 0.75rem 1.5rem; border-radius: 6px; text-decoration: none; font-weight: 600; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">⚙️ Configure</a>
+        <div class="header-content">
+            <h1>Biodiesel Yield Calculator</h1>
+            <p>Advanced Transformer-Based ML Prediction System</p>
+        </div>
+        <div class="header-buttons">
+            <a href="https://github.com" target="_blank" class="header-btn" title="Visit GitHub Repository">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+            <a href="readme.html" class="header-btn" title="View Project Documentation">
+                <i class="fas fa-book"></i> README
+            </a>
+            <a href="references.html" class="header-btn" title="View References">
+                <i class="fas fa-link"></i> References
+            </a>
+            <a href="setup.html" class="header-btn configure" title="Configure Backend">
+                ⚙️ Configure
+            </a>
         </div>
     </header>
 
     <div class="container">
         <div class="info-banner">
-            <strong>💡 Tip:</strong> This calculator uses a trained transformer-based neural network to predict chemical yields. Enter the reaction parameters below and click "Calculate" to get predictions.
+            <strong>💡 Tip:</strong> This calculator uses a trained transformer-based neural network to predict biodiesel yields. Enter the reaction parameters below and click "Calculate" to get predictions.
         </div>
 
         <div class="main-grid">
@@ -471,8 +493,8 @@
                             <span class="label-info">296-378</span>
                         </label>
                         <input type="number" id="temperature" name="temperature" 
-                               placeholder="e.g., 310" min="296" max="378" step="1" required>
-                        <div class="input-hint">Reaction temperature in Kelvin (typical: 310K)</div>
+                               placeholder="e.g., 313.15" min="296" max="378" step="any" required>
+                        <div class="input-hint">Reaction temperature in Kelvin (typical: 310-320K)</div>
                         <div class="error" id="error-temperature"></div>
                     </div>
 
@@ -561,34 +583,15 @@
                 </div>
             </div>
         </div>
-
-        <!-- Advanced Features -->
-        <div class="advanced-section">
-            <h3>Advanced Features</h3>
-            <div class="feature-list">
-                <div class="feature-item">
-                    <strong>🤖 Transformer Architecture</strong>
-                    <p>Multi-head self-attention mechanism for superior feature learning</p>
-                </div>
-                <div class="feature-item">
-                    <strong>📊 Uncertainty Quantification</strong>
-                    <p>95% confidence intervals with ensemble predictions</p>
-                </div>
-                <div class="feature-item">
-                    <strong>🧠 26 Engineered Features</strong>
-                    <p>Thermodynamic, quantum, and interaction-based features</p>
-                </div>
-                <div class="feature-item">
-                    <strong>⚡ GPU Acceleration</strong>
-                    <p>Lightning-fast predictions with CUDA support</p>
-                </div>
-            </div>
-        </div>
     </div>
 
     <footer>
-        <p>Yield Calculator v2.0 | Powered by Advanced ML Architecture</p>
-        <p>Deploy this site from <a href="https://github.com" target="_blank">GitHub</a></p>
+        <p><strong>Biodiesel Yield Calculator v2.0</strong></p>
+        <p>Advanced Machine Learning Prediction System</p>
+        <div class="footer-divider"></div>
+        <p style="margin-top: 1rem;"><strong>National Laboratory Astana</strong></p>
+        <p>Computational Engineering and Materials Science Laboratory</p>
+        <p>© 2026</p>
     </footer>
 
     <script>
@@ -597,7 +600,7 @@
         const statusEl = document.getElementById('status');
         const resultsContainer = document.getElementById('resultsContainer');
 
-        // Typical ranges for warnings
+        // Typical ranges for warnings (training data ranges)
         const typicalRanges = {
             temperature: { min: 296, max: 335, name: 'Temperature (K)' },
             molar_ratio: { min: 1.0, max: 4.0, name: 'Molar Ratio' },
