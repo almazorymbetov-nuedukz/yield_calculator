@@ -92,9 +92,11 @@ def train_model(args):
     else:
         print(f"Generating synthetic training data ({args.num_samples} samples)...")
         df = create_training_data(args.num_samples)
-        df.to_csv("training_data.csv", index=False)
-        print("Saved to: training_data.csv")
-    
+        os.makedirs("data", exist_ok=True)
+        generated_data_path = os.path.join("data", "training_data.csv")
+        df.to_csv(generated_data_path, index=False)
+        print(f"Saved to: {generated_data_path}")
+
     # Feature engineering
     config = YieldConfig()
     feature_engineer = FeatureEngineer(config)
@@ -110,13 +112,12 @@ def train_model(args):
     print("Normalizing data...")
     scaler_x = StandardScaler()
     scaler_y = MinMaxScaler(feature_range=(0, 1))
-    
+
     X = scaler_x.fit_transform(X)
     y = scaler_y.fit_transform(y)
-    
-    # Save scalers
-    joblib.dump({"scaler_x": scaler_x, "scaler_y": scaler_y}, "scalers.joblib")
-    
+
+    # Root-level scaler artifact is no longer kept; checkpoint scalers are saved with each trained model.
+
     # Split data
     dataset = torch.utils.data.TensorDataset(
         torch.FloatTensor(X), torch.FloatTensor(y)

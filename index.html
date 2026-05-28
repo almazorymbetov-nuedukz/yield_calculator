@@ -458,13 +458,13 @@ Ret<!DOCTYPE html>
             <a href="https://github.com/almazorymbetov-nuedukz/yield_calculator" target="_blank" class="header-btn" title="Visit GitHub Repository">
                 <i class="fab fa-github"></i> GitHub
             </a>
-            <a href="readme.html" class="header-btn" title="View Project Documentation">
+            <a href="docs/readme.html" class="header-btn" title="View Project Documentation">
                 <i class="fas fa-book"></i> README
             </a>
-            <a href="references.html" class="header-btn" title="View References">
+            <a href="docs/references.html" class="header-btn" title="View References">
                 <i class="fas fa-link"></i> References
             </a>
-            <a href="setup.html" class="header-btn configure" title="Configure Backend">
+            <a href="docs/setup.html" class="header-btn configure" title="Configure Backend">
                 <i class="fas fa-cog"></i> Configure
             </a>
         </div>
@@ -691,7 +691,7 @@ Ret<!DOCTYPE html>
                 displayError(
                     `<strong>Backend Connection Error</strong><br>` +
                     `Cannot connect to backend at: <code>${backendUrl}</code><br>` +
-                    `<small>Go to <a href="setup.html" style="color: var(--error);">Configure</a> to set correct backend URL.</small>`
+                    `<small>Go to <a href="docs/setup.html" style="color: var(--error);">Configure</a> to set correct backend URL.</small>`
                 );
             }
         }
@@ -799,7 +799,7 @@ Ret<!DOCTYPE html>
                 displayError(
                     `<strong>Backend Unavailable</strong><br>` +
                     `Cannot connect to ${backendUrl}<br>` +
-                    `<a href="setup.html" style="color: var(--error);">Configure backend URL</a>`
+                    `<a href="docs/setup.html" style="color: var(--error);">Configure backend URL</a>`
                 );
                 return;
             }
@@ -857,12 +857,18 @@ Ret<!DOCTYPE html>
                         `<strong>Prediction Failed</strong><br>` +
                         `Invalid response from backend.<br>` +
                         `<small>${backendMsg}</small><br>` +
-                        `<a href="setup.html" style="color: var(--error);">Check backend configuration</a>`
+                        `<a href="docs/setup.html" style="color: var(--error);">Check backend configuration</a>`
                     );
                     return;
                 }
 
                 displayResults(result);
+
+                // Display any server warnings (out-of-distribution inputs)
+                if (result.warnings && result.warnings.length) {
+                    const note = result.warnings.join('; ');
+                    showStatus(`Warning: ${note}`, 'error');
+                }
             } catch (error) {
                 let errorMsg = 'Connection error';
                 
@@ -877,7 +883,7 @@ Ret<!DOCTYPE html>
                 displayError(
                     `<strong>Prediction Failed</strong><br>` +
                     `${errorMsg}<br>` +
-                    `<small><a href="setup.html" style="color: var(--error);">Check backend configuration</a></small>`
+                    `<small><a href="docs/setup.html" style="color: var(--error);">Check backend configuration</a></small>`
                 );
                 console.error('Prediction error:', error);
             } finally {

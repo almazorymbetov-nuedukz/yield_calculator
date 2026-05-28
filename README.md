@@ -203,7 +203,7 @@ Open `index.html` in your browser:
 - One-click deployment info
 
 #### Setup & Configuration Interface
-Open `setup.html` in your browser:
+Open `docs/setup.html` in your browser:
 - Configure backend server URL
 - Test backend connection
 - View health status
@@ -293,7 +293,7 @@ Launches standalone GUI application (requires customtkinter).
 
 2. **Frontend (Any Browser):**
    - Open `file:///path/to/index.html` (full calculator)
-   - Or open `file:///path/to/setup.html` (configuration)
+   - Or open `file:///path/to/docs/setup.html` (configuration)
 
 Both interfaces automatically detect `http://localhost:5000`
 

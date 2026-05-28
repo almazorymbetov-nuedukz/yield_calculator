@@ -39,8 +39,8 @@ def initialize_calculator(model_type: str = "attention"):
         raise FileNotFoundError(
             f"No trained model found.\n\n"
             f"Please train a model first by running:\n"
-            f"  python train.py --model_type {model_type} --train_file training_data.csv\n"
-            f"  python train.py --model_type attention --train_file training_data.csv (recommended)"
+            f"  python train.py --model_type {model_type} --train_file data/training_data.csv\n"
+            f"  python train.py --model_type attention --train_file data/training_data.csv (recommended)"
         )
     
     device = get_device()

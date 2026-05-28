@@ -13,7 +13,7 @@ def check_files():
     required_files = {
         'Frontend': [
             'index.html',
-            'setup.html'
+            'docs/setup.html'
         ],
         'Backend': [
             'app.py',
@@ -21,11 +21,9 @@ def check_files():
             'Procfile'
         ],
         'Documentation': [
-            'WEBSITE_README.md',
-            'GETTING_STARTED.md',
-            'README-DEPLOY.md',
-            'CONFIG_GUIDE.md',
-            'PACKAGE_SUMMARY.md'
+            'docs/readme.html',
+            'docs/references.html',
+            'docs/setup.html'
         ],
         'Configuration': [
             '.gitignore',
@@ -117,7 +115,7 @@ def print_urls():
     print("\n" + "=" * 60)
     print("\n🌐 Quick URLs:")
     print("  Frontend:  file:///path/to/index.html")
-    print("  Setup:     file:///path/to/setup.html")
+    print("  Setup:     file:///path/to/docs/setup.html")
     print("  Backend:   http://localhost:5000")
     print("  Health:    http://localhost:5000/api/health")
 

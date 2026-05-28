@@ -130,6 +130,21 @@ class YieldCalculator:
                 f"Missing input scaler for model '{self.model_path}'. "
                 "Please ensure the corresponding *_scalers.joblib file is present."
             )
+
+        # Out-of-distribution check: compare raw inputs to config ranges
+        ood_warnings = []
+        try:
+            ranges = getattr(self.config, 'input_ranges', {}) or {}
+            for key, val in raw_data.items():
+                low, high = ranges.get(key, (None, None))
+                if low is not None and high is not None:
+                    # compare single value
+                    vval = float(val[0])
+                    if vval < low or vval > high:
+                        ood_warnings.append(f"{key}={vval} outside training range [{low},{high}]")
+        except Exception:
+            # If config missing or malformed, skip OOD checks silently
+            ood_warnings = []
         
         # Convert to tensor
         x_tensor = torch.FloatTensor(x).to(self.device)
@@ -159,26 +174,36 @@ class YieldCalculator:
         y_avg = float(np.mean(preds_orig))
         y_std = float(np.std(preds_orig))
         
-        # Compute residual glycerol and purity. Handle G units robustly (fraction 0-1 or percent >1).
-        g_frac = (g / 100.0) if (g is not None and g > 1.0) else g
-        if g_frac is None:
-            g_frac = 0.0
+        # Compute residual glycerol and purity.
+        # Assume `g` is provided as percentage (e.g., 1.5 means 1.5%). Convert to fraction.
+        try:
+            g_val = 0.0 if g is None else float(g)
+        except Exception:
+            g_val = 0.0
+
+        g_frac = g_val / 100.0
 
         residual_frac = g_frac * (1.0 - (y_avg / 100.0))
         residual_percent = max(0.0, residual_frac * 100.0)
         purity_percent = max(0.0, (1.0 - residual_frac) * 100.0)
 
         result = {
-            "yield": max(0.0, min(100.0, y_avg)),
-            "yield_std": y_std,
-            "yield_ci_95": 2.0 * y_std,
-            "residual_glycerol_percent": residual_percent,
-            "purity_percent": purity_percent,
-            "temperature": t,
-            "molar_ratio": r,
-            "density": d,
-            "viscosity": v
+            "yield": float(max(0.0, min(100.0, y_avg))),
+            "yield_std": float(y_std),
+            "yield_ci_95": float(2.0 * y_std),
+            # Provide both legacy and new keys so frontend integrations are robust
+            "residual_glycerol_percent": float(residual_percent),
+            "purity_percent": float(purity_percent),
+            "residual_glycerol": float(residual_percent),
+            "purity": float(purity_percent),
+            "temperature": float(t),
+            "molar_ratio": float(r),
+            "density": float(d),
+            "viscosity": float(v)
         }
+        # Add OOD warnings if any
+        result['warnings'] = ood_warnings
+        result['oob'] = len(ood_warnings) > 0
         
         return result
     

@@ -23,7 +23,9 @@ CORS(app,
 MODEL_DIR = "checkpoints"
 MODEL_ATTENTION = os.path.join(MODEL_DIR, "yield_model_attention.pt")
 FALLBACK_MODEL = os.path.join(MODEL_DIR, "best_model.pt")
-LOG_FILE = "prediction.log"
+LOG_DIR = "logs"
+LOG_FILE = os.path.join(LOG_DIR, "prediction.log")
+os.makedirs(LOG_DIR, exist_ok=True)
 
 # Configure logging for prediction requests
 logging.basicConfig(

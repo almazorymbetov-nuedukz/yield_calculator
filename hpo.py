@@ -11,7 +11,7 @@ import pandas as pd
 from train import train_model
 
 ROOT = Path('.')
-TRAIN_CSV = ROOT / 'training_data.csv'
+TRAIN_CSV = ROOT / 'data' / 'training_data.csv'
 
 # Small set of hyperparameter configurations (short runs)
 configs = [
