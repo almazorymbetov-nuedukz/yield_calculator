@@ -1,454 +1,103 @@
-Ret<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biodiesel Yield Calculator - ML Prediction System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root{
+            --g1: #7f5af0; /* purple */
+            --g2: #5eead4; /* teal */
+            --g3: #ff7ab6; /* pink */
+            --card: rgba(255,255,255,0.9);
+            --muted: rgba(20,20,20,0.6);
+            --glass: rgba(255,255,255,0.06);
+            --shadow: 0 8px 30px rgba(20,20,30,0.08);
         }
 
-        :root {
-            /* Scientific color palette */
-            --primary: #1e3a5f;      /* Deep blue */
-            --secondary: #00897b;    /* Teal */
-            --accent: #d4a574;       /* Copper/Gold */
-            --light-bg: #f5f7fa;     /* Light bg */
-            --card-bg: #ffffff;      /* White cards */
-            --text-primary: #1a1a1a; /* Dark text */
-            --text-secondary: #666666;
-            --border: #e0e6ed;
-            --success: #2e7d32;
-            --error: #c62828;
-            --shadow: 0 2px 8px rgba(30, 58, 95, 0.1);
+        html,body{ height:100%; }
+
+        body{
+            font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            color: var(--muted);
+            background: linear-gradient(180deg, #0f1724 0%, #071023 100%);
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            line-height:1.5;
+            overflow-x: hidden;
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--light-bg);
-            color: var(--text-primary);
-            line-height: 1.6;
+        /* Decorative animated blobs behind content */
+        .blobs{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
+        .blob{ position:absolute; filter: blur(80px); opacity:0.9; transform: translate3d(0,0,0); }
+        .blob.b1{ width:60vmax; height:60vmax; left:-20vmin; top:-25vmin; background: radial-gradient(circle at 30% 30%, var(--g1) 0%, transparent 40%); animation: float 18s ease-in-out infinite; }
+        .blob.b2{ width:50vmax; height:50vmax; right:-15vmin; top:-10vmin; background: radial-gradient(circle at 70% 30%, var(--g2) 0%, transparent 40%); animation: float 22s ease-in-out infinite reverse; }
+        .blob.b3{ width:45vmax; height:45vmax; left:10vmin; bottom:-25vmin; background: radial-gradient(circle at 40% 60%, var(--g3) 0%, transparent 40%); animation: float 20s ease-in-out infinite; }
+
+        @keyframes float{ 0%{ transform: translateY(0) scale(1); } 50%{ transform: translateY(6vh) scale(1.04); } 100%{ transform: translateY(0) scale(1); } }
+
+        /* Header: full-width, transparent to show blobs */
+        header{
+            width:100%;
+            padding:3rem 4vw;
+            display:flex;
+            gap:1rem;
+            align-items:center;
+            justify-content:space-between;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+            color: #fff;
+            position:relative;
+            z-index:2;
+            backdrop-filter: blur(6px) saturate(120%);
         }
 
-        /* Header */
-        header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            padding: 2.5rem 1rem;
-            text-align: center;
-            box-shadow: var(--shadow);
-        }
+        .header-content{ flex:1; text-align:left; }
+        header h1{ font-size:2rem; font-weight:700; color:#fff; margin-bottom:0.25rem; }
+        header p{ font-size:0.95rem; color: rgba(255,255,255,0.8); font-weight:300; }
 
-        header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 2.5rem 1rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .header-buttons{ display:flex; gap:0.6rem; align-items:center; }
+        .header-btn{ background: rgba(255,255,255,0.06); color: #fff; padding:0.5rem 0.9rem; border-radius:8px; text-decoration:none; display:inline-flex; gap:0.6rem; align-items:center; border:1px solid rgba(255,255,255,0.06); font-weight:600; }
+        .header-btn:hover{ transform: translateY(-3px); }
 
-        .header-content {
-            flex: 1;
-            text-align: center;
-        }
+        /* Make main layout full width */
+        .container{ width:100%; padding:3rem 4vw; max-width:none; margin:0 auto; }
 
-        .header-buttons {
-            display: flex;
-            gap: 0.75rem;
-            align-items: center;
-        }
+        .info-banner{ background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border-left:4px solid rgba(255,255,255,0.06); padding:1rem 1.25rem; border-radius:8px; margin-bottom:2rem; color:rgba(255,255,255,0.9); }
 
-        .header-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 0.6rem 1.2rem;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-        }
+        .main-grid{ display:grid; grid-template-columns: 1fr 420px; gap:2rem; align-items:start; }
+        @media (max-width:980px){ .main-grid{ grid-template-columns:1fr; } }
 
-        .header-btn:hover {
-            background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
-        }
+        .form-card, .results-card{ background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.85)); border-radius:14px; padding:2rem; box-shadow:var(--shadow); color: #071023; }
+        .results-card{ background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.9)); }
 
-        .header-btn.configure {
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
+        .form-card h2, .results-card h2{ font-size:1.25rem; color:#0b2040; margin-bottom:1rem; }
 
-        .header-btn.configure:hover {
-            background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
-        }
+        label{ color:#102437; font-weight:600; margin-bottom:0.5rem; display:block; }
+        input[type="number"], input[type="text"]{ width:100%; padding:0.85rem; border-radius:10px; border:1px solid rgba(11,32,64,0.06); background: white; font-size:1rem; }
 
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-        }
+        .button-group{ display:flex; gap:1rem; }
+        .btn-primary{ background: linear-gradient(90deg,var(--g1),var(--g2)); color:#fff; padding:0.9rem 1.1rem; border-radius:10px; border:none; box-shadow:0 8px 24px rgba(31,41,55,0.12); }
+        .btn-secondary{ background:transparent; border:1px solid rgba(11,32,64,0.06); color:#0b2040; padding:0.85rem 1rem; border-radius:10px; }
 
-        header p {
-            font-size: 1rem;
-            opacity: 0.95;
-            font-weight: 300;
-        }
+        .result-item{ padding:1rem; border-radius:10px; margin-bottom:1rem; background: linear-gradient(180deg, rgba(127,90,240,0.03), rgba(94,234,212,0.03)); border-left:6px solid rgba(127,90,240,0.18); }
+        .result-value{ font-size:1.8rem; font-weight:700; color:#0b2040; }
 
-        /* Main container */
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
+        footer{ padding:2rem 4vw; color: rgba(255,255,255,0.9); text-align:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); margin-top:3rem; }
 
-        /* Info banner */
-        .info-banner {
-            background-color: #e3f2fd;
-            border-left: 4px solid var(--secondary);
-            padding: 1rem;
-            border-radius: 4px;
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-        }
-
-        .info-banner strong {
-            color: var(--secondary);
-        }
-
-        /* Main grid */
-        .main-grid {
-            display: grid;
-            grid-template-columns: minmax(360px, 1.2fr) minmax(360px, 0.8fr);
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        /* Form card */
-        .form-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: var(--shadow);
-        }
-
-        .form-card h2 {
-            color: var(--primary);
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-        }
-
-        .form-card h2::before {
-            content: '';
-        }
-
-        /* Form groups */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
-            display: block;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-        }
-
-        .label-info {
-            display: inline-block;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: normal;
-            margin-left: 0.5rem;
-        }
-
-        input[type="number"],
-        input[type="text"] {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            font-family: 'Georgia', 'Times New Roman', serif;
-        }
-
-        input[type="number"]:focus,
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--secondary);
-            box-shadow: 0 0 0 3px rgba(0, 137, 123, 0.1);
-        }
-
-        input[type="number"]::placeholder {
-            color: var(--text-secondary);
-        }
-
-        .input-hint {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-top: 0.3rem;
-        }
-
-        /* Results card */
-        .results-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: var(--shadow);
-            min-height: 100%;
-        }
-
-        .results-card h2 {
-            color: var(--primary);
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-        }
-
-        .results-card h2::before {
-            content: '';
-        }
-
-        /* Result item */
-        .result-item {
-            padding: 1rem;
-            background: linear-gradient(135deg, rgba(0, 137, 123, 0.05) 0%, rgba(212, 165, 116, 0.05) 100%);
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            border-left: 4px solid var(--secondary);
-        }
-
-        .result-label {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .result-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-top: 0.5rem;
-        }
-
-        .result-unit {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            font-weight: normal;
-        }
-
-        .result-uncertainty {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-top: 0.3rem;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 2rem 1rem;
-            color: var(--text-secondary);
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        .empty-state-text {
-            font-size: 0.95rem;
-        }
-
-        /* Buttons */
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        button {
-            flex: 1;
-            padding: 1rem;
-            border: none;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(30, 58, 95, 0.4);
-        }
-
-        .btn-primary:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .btn-secondary {
-            background-color: white;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background-color: var(--light-bg);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Status indicator */
-        .status {
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-weight: 500;
-            display: none;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .status.show {
-            display: flex;
-        }
-
-        .status-icon {
-            font-size: 1.2rem;
-        }
-
-        .status.loading {
-            background-color: #e3f2fd;
-            color: var(--primary);
-        }
-
-        .status.success {
-            background-color: #e8f5e9;
-            color: var(--success);
-        }
-
-        .status.error {
-            background-color: #ffebee;
-            color: var(--error);
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 1rem;
-            height: 1rem;
-            border: 3px solid rgba(30, 58, 95, 0.2);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Validation */
-        .error {
-            color: var(--error);
-            font-size: 0.85rem;
-            margin-top: 0.3rem;
-        }
-
-        .error.warning {
-            color: #ff9800;
-        }
-
-        input.invalid {
-            border-color: var(--error);
-        }
-
-        /* Footer */
-        footer {
-            background-color: var(--primary);
-            color: white;
-            text-align: center;
-            padding: 2rem 1rem;
-            margin-top: 3rem;
-            font-size: 0.9rem;
-        }
-
-        footer a {
-            color: var(--accent);
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            text-decoration: underline;
-        }
-
-        .footer-divider {
-            margin: 0.5rem 0;
-            border-top: 1px solid rgba(255,255,255,0.2);
-            padding-top: 0.5rem;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .header-buttons {
-                width: 100%;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            header h1 {
-                font-size: 2rem;
-            }
-
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            .result-value {
-                font-size: 1.5rem;
-            }
-        }
-
-
+        /* small screens */
+        @media (max-width:600px){ header{ padding:2rem 4vw; } header h1{ font-size:1.5rem; } }
     </style>
 </head>
 <body>
+    <div class="blobs" aria-hidden="true">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+    </div>
     <header>
         <div class="header-content">
             <h1>Biodiesel Yield Calculator</h1>
