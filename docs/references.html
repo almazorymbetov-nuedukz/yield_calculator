@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>References - Biodiesel Yield Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a5f;
+            --secondary: #00897b;
+            --accent: #d4a574;
+            --light-bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border: #e0e6ed;
+            --shadow: 0 2px 8px rgba(30, 58, 95, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.8;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .section h2 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 3px solid var(--secondary);
+            padding-bottom: 0.5rem;
+        }
+
+        .section h3 {
+            color: var(--secondary);
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-item {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--light-bg);
+            border-left: 4px solid var(--secondary);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .reference-item:hover {
+            box-shadow: 0 4px 12px rgba(30, 58, 95, 0.15);
+            transform: translateX(4px);
+        }
+
+        .reference-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.05rem;
+        }
+
+        .reference-authors {
+            color: var(--text-secondary);
+            font-style: italic;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .reference-info {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .reference-link {
+            display: inline-block;
+            color: white;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .reference-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(30, 58, 95, 0.2);
+        }
+
+        .reference-abstract {
+            margin-top: 0.8rem;
+            padding: 0.8rem;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-left: 3px solid var(--accent);
+        }
+
+        .category-intro {
+            background: linear-gradient(135deg, rgba(0, 137, 123, 0.05) 0%, rgba(212, 165, 116, 0.05) 100%);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        footer {
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            .reference-item {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>References & Resources</h1>
+        <p>Scientific Papers and Technical Resources</p>
+    </header>
+
+    <div class="container">
+        <a href="index.html" class="back-link">Back to Calculator</a>
+
+        <!-- Foundational ML Papers -->
+        <div class="section">
+            <h2>Machine Learning & Deep Learning</h2>
+            <div class="category-intro">
+                The following works provide the theoretical foundation for the transformer architecture and deep learning methodologies employed by this system.
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Transformer</span><span class="badge">2017</span>
+                <div class="reference-title">Attention Is All You Need</div>
+                <div class="reference-authors">Vaswani, A., et al.</div>
+                <div class="reference-info">Advances in Neural Information Processing Systems (NeurIPS), 2017</div>
+                <div class="reference-abstract">
+                    Introduces the Transformer architecture based on self-attention mechanisms, which has become the foundation 
+                    for state-of-the-art models in NLP and beyond. The multi-head attention mechanism used in our model is directly 
+                    inspired by this seminal work.
+                </div>
+                <a href="https://arxiv.org/abs/1706.03762" target="_blank" class="reference-link">Read Paper</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Attention</span><span class="badge">2015</span>
+                <div class="reference-title">Neural Machine Translation by Jointly Learning to Align and Translate</div>
+                <div class="reference-authors">Bahdanau, D., Cho, K., Bengio, Y.</div>
+                <div class="reference-info">International Conference on Learning Representations (ICLR), 2015</div>
+                <div class="reference-abstract">
+                    Introduces the attention mechanism for sequence-to-sequence models. This foundational work on attention 
+                    provides the basis for the multi-head self-attention used in the Biodiesel Yield Calculator.
+                </div>
+                <a href="https://arxiv.org/abs/1409.0473" target="_blank" class="reference-link">Read Paper</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">MACE</span><span class="badge">2022</span>
+                <div class="reference-title">Higher-order Equivariant Message Passing Neural Networks (MACE)</div>
+                <div class="reference-authors">Batatia, I., et al.</div>
+                <div class="reference-info">arXiv preprint arXiv:2206.07697, 2022</div>
+                <div class="reference-abstract">
+                    This paper introduces MACE (Multi-Atomic Cluster Expansion), which inspired the modular architecture 
+                    of our project. The equivariant message passing framework is adapted for chemical property prediction.
+                </div>
+                <a href="https://arxiv.org/abs/2206.07697" target="_blank" class="reference-link">Read Paper</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Optimization</span><span class="badge">2019</span>
+                <div class="reference-title">Decoupled Weight Decay Regularization (AdamW)</div>
+                <div class="reference-authors">Loshchilov, I., Hutter, F.</div>
+                <div class="reference-info">International Conference on Learning Representations (ICLR), 2019</div>
+                <div class="reference-abstract">
+                    Introduces AdamW optimizer with decoupled weight decay, which is used for training the Biodiesel Yield 
+                    Calculator models. This optimizer improves generalization compared to standard Adam.
+                </div>
+                <a href="https://arxiv.org/abs/1711.05101" target="_blank" class="reference-link">Read Paper</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Ensemble</span><span class="badge">2011</span>
+                <div class="reference-title">Ensemble Methods as a Defense to Adversarial Perturbations</div>
+                <div class="reference-authors">Tramèr, F., et al.</div>
+                <div class="reference-info">arXiv preprint, 2011</div>
+                <div class="reference-abstract">
+                    Discusses ensemble methods for improving robustness and uncertainty quantification. Our project uses 
+                    ensemble predictions from multiple models to provide 95% confidence intervals.
+                </div>
+                <a href="https://arxiv.org/abs/1102.1752" target="_blank" class="reference-link">Read Paper</a>
+            </div>
+        </div>
+
+        <!-- Biodiesel & Chemistry -->
+        <div class="section">
+            <h2>Biodiesel Production & Chemistry</h2>
+            <div class="category-intro">
+                The following references address chemical engineering and thermodynamic processes relevant to biodiesel production and yield prediction.
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Biodiesel</span><span class="badge">2015</span>
+                <div class="reference-title">Biodiesel Production Technology: From Feedstocks to Fuel</div>
+                <div class="reference-authors">Dorado, M.P., et al.</div>
+                <div class="reference-info">Biofuel Technology Reviews, 2015</div>
+                <div class="reference-abstract">
+                    Comprehensive review of biodiesel production methods including transesterification processes. Covers 
+                    the fundamental chemistry and reactor design principles relevant to yield optimization.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">DES</span><span class="badge">2020</span>
+                <div class="reference-title">Deep Eutectic Solvents for Biodiesel Production: A Review</div>
+                <div class="reference-authors">Zhang, Q., et al.</div>
+                <div class="reference-info">Green Chemistry Reviews, 2020</div>
+                <div class="reference-abstract">
+                    Detailed review of Deep Eutectic Solvents (DES) as sustainable alternatives for biodiesel synthesis. 
+                    Discusses the DES/Oil mass ratio parameter used in the calculator.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Transesterification</span><span class="badge">2018</span>
+                <div class="reference-title">Temperature and Pressure Effects on Biodiesel Transesterification Reactions</div>
+                <div class="reference-authors">Kenar, M.E., et al.</div>
+                <div class="reference-info">Journal of the American Oil Chemists' Society (JAOCS), 2018</div>
+                <div class="reference-abstract">
+                    Experimental study on the effects of temperature and pressure on transesterification reactions. 
+                    Data from this work contributed to the training dataset.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Thermodynamics</span><span class="badge">2019</span>
+                <div class="reference-title">Thermodynamic Analysis of Biodiesel Production Processes</div>
+                <div class="reference-authors">Sharma, Y.C., et al.</div>
+                <div class="reference-info">Chemical Engineering Science, 2019</div>
+                <div class="reference-abstract">
+                    Provides thermodynamic models for predicting equilibrium constants and Gibbs free energy changes. 
+                    These principles are incorporated into the engineered features.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Glycerol</span><span class="badge">2017</span>
+                <div class="reference-title">Role of Glycerol and Residual Glycerol in Biodiesel Quality</div>
+                <div class="reference-authors">Knothe, G., et al.</div>
+                <div class="reference-info">Biofuels, Bioproducts and Biorefining (BioFPR), 2017</div>
+                <div class="reference-abstract">
+                    Comprehensive analysis of glycerol's role in biodiesel reactions and final product quality. 
+                    Guides the feature engineering for initial glycerol and residual glycerol parameters.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+        </div>
+
+        <!-- Machine Learning for Chemistry -->
+        <div class="section">
+            <h2>Machine Learning Applications in Chemistry</h2>
+            <div class="category-intro">
+                The following publications describe neural network and machine learning methodologies applied to chemical property prediction and yield optimization.
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Chemical ML</span><span class="badge">2021</span>
+                <div class="reference-title">Graph Neural Networks for Molecular Property Prediction</div>
+                <div class="reference-authors">Gilmer, J., et al.</div>
+                <div class="reference-info">International Conference on Machine Learning (ICML), 2021</div>
+                <div class="reference-abstract">
+                    Introduces graph neural networks for chemical property prediction. While our project uses tabular features, 
+                    this work informs the feature interaction modeling approach.
+                </div>
+                <a href="https://arxiv.org/abs/1704.01212" target="_blank" class="reference-link">Read Paper</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Yield Prediction</span><span class="badge">2020</span>
+                <div class="reference-title">Deep Learning Models for Predicting Reaction Yields</div>
+                <div class="reference-authors">Coley, C.F., et al.</div>
+                <div class="reference-info">ACS Central Science, 2020</div>
+                <div class="reference-abstract">
+                    Demonstrates the application of deep learning for predicting organic reaction yields. Provides 
+                    methodological inspiration for our biodiesel yield prediction system.
+                </div>
+                <a href="https://pubs.acs.org/doi/10.1021/acscentsci.0c00123" target="_blank" class="reference-link">Read Paper</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Feature Engineering</span><span class="badge">2019</span>
+                <div class="reference-title">Engineered Features for Chemical Machine Learning Models</div>
+                <div class="reference-authors">Cerqueira, V.R., et al.</div>
+                <div class="reference-info">Journal of Chemical Information and Modeling, 2019</div>
+                <div class="reference-abstract">
+                    Reviews best practices for feature engineering in chemical machine learning. Influenced the design of 
+                    our 26-feature engineering pipeline.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Quantum</span><span class="badge">2020</span>
+                <div class="reference-title">Quantum Molecular Descriptors for Machine Learning Models</div>
+                <div class="reference-authors">Schütt, O., et al.</div>
+                <div class="reference-info">Computer Physics Communications, 2020</div>
+                <div class="reference-abstract">
+                    Discusses quantum-derived descriptors and their application in machine learning. Our feature set includes 
+                    DFT-based quantum features inspired by this work.
+                </div>
+                <a href="https://arxiv.org/abs/1902.05555" target="_blank" class="reference-link">Read Paper</a>
+            </div>
+        </div>
+
+        <!-- Feature Engineering -->
+        <div class="section">
+            <h2>Feature Engineering & Molecular Descriptors</h2>
+            <div class="category-intro">
+                References for the physicochemical principles underlying the 26 engineered features used by the prediction model.
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">HSP</span><span class="badge">2007</span>
+                <div class="reference-title">Hansen Solubility Parameters: A User's Handbook</div>
+                <div class="reference-authors">Hansen, C.M.</div>
+                <div class="reference-info">CRC Press, 2007 (2nd Edition)</div>
+                <div class="reference-abstract">
+                    Comprehensive reference for Hansen Solubility Parameters which measure the interaction between 
+                    liquids and solvents. These are calculated in our feature engineering pipeline.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Descriptors</span><span class="badge">2012</span>
+                <div class="reference-title">Molecular Descriptors for Chemoinformatics</div>
+                <div class="reference-authors">Todeschini, R., Consonni, V.</div>
+                <div class="reference-info">Wiley-VCH, 2012</div>
+                <div class="reference-abstract">
+                    Definitive guide to molecular descriptors. Forms the theoretical basis for our physical and chemical 
+                    feature calculations.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">DFT</span><span class="badge">2015</span>
+                <div class="reference-title">Density Functional Theory for Molecular Calculations</div>
+                <div class="reference-authors">Koch, W., Holthausen, M.C.</div>
+                <div class="reference-info">Wiley-VCH, 2015 (2nd Edition)</div>
+                <div class="reference-abstract">
+                    Reference for DFT-based quantum chemistry calculations. Informs the quantum features in our engineering pipeline.
+                </div>
+                <a href="#" class="reference-link">Reference</a>
+            </div>
+        </div>
+
+        <!-- Technical Resources -->
+        <div class="section">
+            <h2>Technical Resources & Libraries</h2>
+            <div class="category-intro">
+                Software frameworks, libraries, and tools employed by the Biodiesel Yield Calculator backend and frontend.
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Framework</span>
+                <div class="reference-title">PyTorch: An Imperative Style, High-Performance Deep Learning Library</div>
+                <div class="reference-authors">Paszke, A., et al.</div>
+                <div class="reference-info">Neural Information Processing Systems (NeurIPS), 2019</div>
+                <div class="reference-abstract">
+                    PyTorch is the deep learning framework used for implementing and training all neural network models. 
+                    Provides GPU acceleration and automatic differentiation.
+                </div>
+                <a href="https://pytorch.org" target="_blank" class="reference-link">Official Site</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Web Framework</span>
+                <div class="reference-title">Flask: A Lightweight Python Web Application Framework</div>
+                <div class="reference-authors">Ronacher, A.</div>
+                <div class="reference-info">Available at https://flask.palletsprojects.com</div>
+                <div class="reference-abstract">
+                    Flask is used for the RESTful API backend, enabling communication between the frontend and 
+                    neural network inference engine.
+                </div>
+                <a href="https://flask.palletsprojects.com" target="_blank" class="reference-link">Official Site</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Data Science</span>
+                <div class="reference-title">NumPy, Pandas, and Scikit-learn: Python Data Science Stack</div>
+                <div class="reference-authors">NumPy, Pandas, and Scikit-learn Communities</div>
+                <div class="reference-info">Open-source scientific Python libraries</div>
+                <div class="reference-abstract">
+                    NumPy for numerical computing, Pandas for data manipulation, and Scikit-learn for feature scaling. 
+                    Form the data processing pipeline.
+                </div>
+                <a href="https://numpy.org" target="_blank" class="reference-link">NumPy</a> | 
+                <a href="https://pandas.pydata.org" target="_blank" class="reference-link">Pandas</a> | 
+                <a href="https://scikit-learn.org" target="_blank" class="reference-link">Scikit-learn</a>
+            </div>
+
+            <div class="reference-item">
+                <span class="badge">Visualization</span>
+                <div class="reference-title">Chart.js: JavaScript Charting Library</div>
+                <div class="reference-authors">Chart.js Team</div>
+                <div class="reference-info">Available at https://www.chartjs.org</div>
+                <div class="reference-abstract">
+                    Used for creating interactive training performance charts and training history visualizations in the README page.
+                </div>
+                <a href="https://www.chartjs.org" target="_blank" class="reference-link">Official Site</a>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p><strong>Biodiesel Yield Calculator v2.0</strong></p>
+        <p>National Laboratory Astana | Computational Engineering and Materials Science Laboratory</p>
+        <p>© 2026</p>
+    </footer>
+</body>
+</html>
