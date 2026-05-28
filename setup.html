@@ -159,6 +159,28 @@
         const form = document.getElementById('setupForm');
         const urlInput = document.getElementById('backendUrl');
         const successMsg = document.getElementById('success');
+
+        const HEALTH_CHECK_TIMEOUT = 10000; // 10 seconds
+        
+        /**
+         * Fetch with timeout
+         */
+        async function fetchWithTimeout(url, options = {}, timeout = HEALTH_CHECK_TIMEOUT) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
         
         // Load saved configuration
         window.addEventListener('load', () => {
@@ -177,34 +199,55 @@
             try {
                 new URL(url);
             } catch {
-                alert('Invalid URL format');
+                alert('Invalid URL format. Please enter a valid URL (e.g., http://localhost:5000)');
                 return;
             }
+
+            // Normalize URL (remove trailing slash)
+            const normalizedUrl = url.replace(/\/$/, '');
             
-            // Test connection
+            // Test connection with timeout
             try {
-                const response = await fetch(`${url}/api/health`, {
+                console.log(`Testing connection to ${normalizedUrl}/api/health...`);
+                const response = await fetchWithTimeout(`${normalizedUrl}/api/health`, {
+                    method: 'GET',
                     mode: 'cors'
-                });
-                
+                }, HEALTH_CHECK_TIMEOUT);
+
                 if (response.ok) {
-                    localStorage.setItem('backendUrl', url);
+                    localStorage.setItem('backendUrl', normalizedUrl);
                     successMsg.style.display = 'block';
+                    console.log('✓ Backend connection successful. Redirecting...');
                     setTimeout(() => {
                         window.location.href = 'index.html';
-                    }, 2000);
+                    }, 1500);
                 } else {
-                    alert('Backend returned an error. Check the URL and try again.');
+                    alert(`Backend error: HTTP ${response.status}\n\nPlease check that:\n1. The URL is correct\n2. The backend server is running\n3. CORS is properly configured`);
                 }
-            } catch {
-                // Show warning but still save
+            } catch (error) {
+                console.error('Connection test error:', error);
+                
+                let errorMsg = 'Unknown error';
+                if (error.name === 'AbortError') {
+                    errorMsg = `Connection timeout (>${HEALTH_CHECK_TIMEOUT/1000}s).\n\nThe backend might be:\n• Not running\n• Too slow to respond\n• Behind a firewall`;
+                } else if (error instanceof TypeError) {
+                    errorMsg = `Network error: ${error.message}\n\nPlease check:\n• URL is correct\n• Backend is running\n• Network connectivity`;
+                } else {
+                    errorMsg = error.message;
+                }
+
+                // Show warning but still allow saving
                 const confirm_save = window.confirm(
-                    'Cannot reach backend at the moment.\n\nSave anyway and test later?'
+                    `Cannot connect to backend:\n\n${errorMsg}\n\n` +
+                    `Save URL anyway and test later?\n` +
+                    `(You can try again from the calculator)`
                 );
                 
                 if (confirm_save) {
-                    localStorage.setItem('backendUrl', url);
+                    localStorage.setItem('backendUrl', normalizedUrl);
+                    successMsg.textContent = '✓ Configuration saved (backend offline)';
                     successMsg.style.display = 'block';
+                    console.log('Saved configuration without successful connection test');
                     setTimeout(() => {
                         window.location.href = 'index.html';
                     }, 2000);

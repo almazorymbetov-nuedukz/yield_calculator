@@ -4,13 +4,20 @@ import os
 import torch
 import json
 import logging
+import traceback
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from yield_calc.calculators import YieldCalculator
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+# Configure CORS with specific settings for better compatibility
+CORS(app, 
+     resources={r"/api/*": {"origins": "*"}},
+     methods=['GET', 'POST', 'OPTIONS'],
+     allow_headers=['Content-Type', 'Accept'],
+     supports_credentials=False,
+     max_age=3600)
 
 # Model configuration
 MODEL_DIR = "checkpoints"
@@ -55,17 +62,22 @@ def initialize_calculator():
         return False
 
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/api/health', methods=['GET', 'OPTIONS'])
 def health_check():
-    """Health check endpoint"""
+    """Health check endpoint with detailed status"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     return jsonify({
         'status': 'ok',
         'model_loaded': calculator is not None,
-        'device': 'cuda' if torch.cuda.is_available() else 'cpu'
+        'device': 'cuda' if torch.cuda.is_available() else 'cpu',
+        'version': '2.0',
+        'timestamp': __import__('datetime').datetime.now().isoformat()
     })
 
 
-@app.route('/api/predict', methods=['POST'])
+@app.route('/api/predict', methods=['POST', 'OPTIONS'])
 def predict():
     """Predict yield based on input parameters
     
@@ -80,11 +92,20 @@ def predict():
         "g": float   # Initial Glycerol (%)
     }
     """
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     if calculator is None:
-        return jsonify({'error': 'Model not loaded'}), 503
+        logging.error("Prediction attempted but model not loaded")
+        return jsonify({'error': 'Model not loaded', 'status': 'offline'}), 503
     
     try:
         data = request.get_json()
+        
+        if data is None:
+            logging.warning("Invalid JSON in prediction request")
+            return jsonify({'error': 'Invalid JSON body'}), 400
+        
         logging.info(f"Prediction request payload: {json.dumps(data)}")
         
         # Validate inputs
@@ -92,16 +113,21 @@ def predict():
         for field in required_fields:
             if field not in data:
                 logging.warning(f"Missing field in payload: {field}")
-                return jsonify({'error': f'Missing field: {field}'}), 400
+                return jsonify({'error': f'Missing required field: {field}'}), 400
         
-        # Extract parameters
-        t = float(data['t'])  # Temperature
-        r = float(data['r'])  # Molar Ratio
-        d = float(data['d'])  # Density
-        v = float(data['v'])  # Viscosity
-        m = float(data['m'])  # DES/Oil Mass Ratio
-        w = float(data['w'])  # Water
-        g = float(data['g'])  # Glycerol
+        # Extract and validate parameters
+        try:
+            t = float(data['t'])  # Temperature
+            r = float(data['r'])  # Molar Ratio
+            d = float(data['d'])  # Density
+            v = float(data['v'])  # Viscosity
+            m = float(data['m'])  # DES/Oil Mass Ratio
+            w = float(data['w'])  # Water
+            g = float(data['g'])  # Glycerol
+        except (ValueError, TypeError) as e:
+            logging.warning(f"Type conversion error: {e}")
+            return jsonify({'error': f'Invalid parameter types: {str(e)}'}), 400
+        
         input_data = {'t': t, 'r': r, 'd': d, 'v': v, 'm': m, 'w': w, 'g': g}
         logging.info(f"Validated input parameters: {json.dumps(input_data)}")
         
@@ -120,18 +146,18 @@ def predict():
         
         if result is None:
             logging.error("Prediction failed: calculator returned None")
-            return jsonify({'error': 'Prediction failed'}), 500
+            return jsonify({'error': 'Prediction computation failed', 'status': 'error'}), 500
         
         logging.info(f"Prediction result: {json.dumps(result)}")
         return jsonify(result)
     
-    except ValueError as e:
-        logging.warning(f"Invalid input: {e}")
-        return jsonify({'error': f'Invalid input: {str(e)}'}), 400
     except Exception as e:
-        logging.error(f"Prediction error: {e}")
+        logging.error(f"Prediction error: {e}\n{traceback.format_exc()}")
         print(f"Prediction error: {e}")
-        return jsonify({'error': f'Prediction error: {str(e)}'}), 500
+        return jsonify({
+            'error': f'Prediction error: {str(e)}',
+            'status': 'error'
+        }), 500
 
 
 @app.route('/api/info', methods=['GET'])
