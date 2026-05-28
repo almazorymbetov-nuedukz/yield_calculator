@@ -755,19 +755,24 @@ Ret<!DOCTYPE html>
         }
 
         function displayResults(result) {
+            function fmt(val, digits) {
+                if (val === null || typeof val === 'undefined' || Number.isNaN(Number(val))) return 'N/A';
+                return Number(val).toFixed(digits);
+            }
+
             const html = `
                 <div class="result-item">
                     <div class="result-label">Yield (%)</div>
-                    <div class="result-value">${result.yield.toFixed(2)}<span class="result-unit">%</span></div>
-                    <div class="result-uncertainty">± ${result.yield_ci_95.toFixed(2)}% (95% CI)</div>
+                    <div class="result-value">${fmt(result.yield,2)}<span class="result-unit">%</span></div>
+                    <div class="result-uncertainty">± ${fmt(result.yield_ci_95,2)}% (95% CI)</div>
                 </div>
                 <div class="result-item">
                     <div class="result-label">Residual Glycerol</div>
-                    <div class="result-value">${result.residual_glycerol.toFixed(4)}<span class="result-unit">%</span></div>
+                    <div class="result-value">${fmt(result.residual_glycerol,4)}<span class="result-unit">%</span></div>
                 </div>
                 <div class="result-item">
                     <div class="result-label">Purity</div>
-                    <div class="result-value">${result.purity.toFixed(4)}<span class="result-unit">%</span></div>
+                    <div class="result-value">${fmt(result.purity,4)}<span class="result-unit">%</span></div>
                 </div>
             `;
             resultsContainer.innerHTML = html;
@@ -843,6 +848,20 @@ Ret<!DOCTYPE html>
                 }
 
                 const result = await response.json();
+
+                // Defensive check: ensure backend returned expected numeric fields
+                if (!result || (typeof result.yield === 'undefined' || Number.isNaN(Number(result.yield)))) {
+                    const backendMsg = (result && result.error) ? result.error : JSON.stringify(result);
+                    console.error('Invalid prediction result:', result);
+                    displayError(
+                        `<strong>Prediction Failed</strong><br>` +
+                        `Invalid response from backend.<br>` +
+                        `<small>${backendMsg}</small><br>` +
+                        `<a href="setup.html" style="color: var(--error);">Check backend configuration</a>`
+                    );
+                    return;
+                }
+
                 displayResults(result);
             } catch (error) {
                 let errorMsg = 'Connection error';
