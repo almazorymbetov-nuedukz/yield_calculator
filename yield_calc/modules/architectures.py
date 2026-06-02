@@ -63,16 +63,13 @@ class YieldNetWithAttention(nn.Module):
     ):
         super().__init__()
         
-        # Input embedding and projection to sequence
-        self.input_embedding = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.LayerNorm(hidden_dim),
-            nn.Mish()
-        )
+        # Input projection for each scalar feature token
+        self.input_embedding = nn.Linear(1, hidden_dim)
+        self.input_norm = nn.LayerNorm(hidden_dim)
         
-        # Learnable positional embeddings
+        # Learnable positional embeddings for cls token + each feature token
         self.cls_token = nn.Parameter(torch.zeros(1, 1, hidden_dim))
-        self.pos_embed = nn.Parameter(torch.zeros(1, 2, hidden_dim))  # cls + features
+        self.pos_embed = nn.Parameter(torch.zeros(1, input_dim + 1, hidden_dim))
         
         # Transformer encoder blocks
         self.transformer = nn.Sequential(
@@ -84,25 +81,25 @@ class YieldNetWithAttention(nn.Module):
             ) for _ in range(num_layers)]
         )
         
-        # Classification head
+        # Output head
         self.norm = nn.LayerNorm(hidden_dim)
         self.head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim // 2),
             nn.GELU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_dim // 2, output_dim),
-            # Regression output - no sigmoid
+            # Regression output - no activation
         )
         
         self._init_weights()
     
     def _init_weights(self):
-        """Initialize weights"""
+        """Initialize positional tokens and embeddings"""
         nn.init.trunc_normal_(self.pos_embed, std=0.02)
         nn.init.trunc_normal_(self.cls_token, std=0.02)
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass with attention mechanism
+        """Forward pass with attention over feature tokens
         
         Args:
             x: Input tensor [batch, input_dim]
@@ -110,27 +107,18 @@ class YieldNetWithAttention(nn.Module):
         Returns:
             Yield prediction [batch, 1]
         """
-        B = x.shape[0]
+        B, F = x.shape
+        x = x.unsqueeze(-1)  # [B, F, 1]
+        x = self.input_embedding(x)  # [B, F, hidden_dim]
+        x = self.input_norm(x)
         
-        # Embed input features
-        x = self.input_embedding(x)  # [B, hidden_dim]
-        x = x.unsqueeze(1)  # [B, 1, hidden_dim] - treat as sequence of 1
-        
-        # Add class token
         cls_tokens = self.cls_token.expand(B, -1, -1)  # [B, 1, hidden_dim]
-        x = torch.cat([cls_tokens, x], dim=1)  # [B, 2, hidden_dim]
-        
-        # Add positional embeddings
+        x = torch.cat([cls_tokens, x], dim=1)  # [B, F + 1, hidden_dim]
         x = x + self.pos_embed
         
-        # Apply transformer
         x = self.transformer(x)
-        
-        # Use cls token for classification
-        x = x[:, 0]  # [B, hidden_dim]
-        x = self.norm(x)
+        x = self.norm(x[:, 0])
         x = self.head(x)
-        
         return x
 
 
