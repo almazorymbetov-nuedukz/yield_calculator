@@ -1,7 +1,7 @@
 """Neural network models and components"""
 
 from .blocks import ResidualBlock, AttentionBlock, FeedForwardBlock
-from .architectures import YieldNet, YieldNetWithAttention, EnsembleYieldNet
+from .architectures import YieldNet, YieldNetWithAttention, EnsembleYieldNet, HybridYieldNet
 
 __all__ = [
     "ResidualBlock",
@@ -9,5 +9,6 @@ __all__ = [
     "FeedForwardBlock",
     "YieldNet",
     "YieldNetWithAttention",
-    "EnsembleYieldNet"
+    "EnsembleYieldNet",
+    "HybridYieldNet"
 ]
