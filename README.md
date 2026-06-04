@@ -51,6 +51,10 @@ Yield Calculator is a complete restructuring of the original yield prediction sy
 - Returns mean prediction + uncertainty (std dev)
 - Robust predictions with confidence intervals
 
+#### HybridYieldNet (Experimental)
+- Dense/residual hybrid architecture with growth-rate blocks
+- Prototype for future feature fusion and deeper representation learning
+
 ### 3. **Enhanced Feature Engineering**
 - Increased from 7 → 26 engineered features
 - **New features**:
@@ -76,19 +80,23 @@ Yield Calculator is a complete restructuring of the original yield prediction sy
   - Dtype handling (float32/float64)
 
 ### 5. **Inference Interfaces**
-- **YieldCalculator**: Single model inference with uncertainty
-- **EnsembleCalculator**: Multi-model ensemble predictions
+- **YieldCalculator**: Single model inference with MC dropout uncertainty
+- **EnsembleCalculator**: Multi-model ensemble predictions with model diversity and ensemble size tracking
 - Batch prediction support
-- Automatic scaler handling
+- Automatic scaler handling and OOD warning flags
 
 ### 6. **CLI & Automation**
-- **train.py**: Complete training script with arguments:
+- **train.py**: Complete training script with model selection, synthetic data generation, and checkpoint/scaler saving
   ```bash
   python train.py --model_type attention --num_epochs 2000 --batch_size 32
   ```
-- **demo_train.py**: Compare model performance
+  - supports `--train_file` to load a custom CSV, or generates synthetic samples with `--num_samples`
+  - configurable hyperparameters including `--hidden_dim`, `--num_layers`, `--attention_heads`, `--dropout`, `--weight_decay`, `--patience`, `--device`, and `--dtype`
+  - uses `AdamW` optimizer and robust `SmoothL1Loss` regression
+- **demo_train.py**: Compare model performance and save standard/attention checkpoints
+- **hpo.py**: Hyperparameter search wrapper for `train.py`
 - **test_components.py**: Comprehensive test suite
-- **main.py**: Updated GUI using new architecture
+- **main.py**: Updated `customtkinter` GUI with model fallback and threaded prediction
 
 ## File Structure
 
@@ -113,9 +121,10 @@ yield_calculator/
 │       └── ensemble_calculator.py
 ├── main.py                  # GUI (refactored)
 ├── train.py                 # Training script
-├── demo_train.py           # Performance comparison
-├── test_components.py      # Unit tests
-├── checkpoints/            # Saved models
+├── demo_train.py            # Performance comparison
+├── hpo.py                   # Hyperparameter search wrapper
+├── test_components.py       # Unit tests
+├── checkpoints/             # Saved models
 └── README.md
 ```
 
@@ -225,7 +234,7 @@ Content-Type: application/json
 {
   "t": 315.15,    # Temperature (K) [273-500]
   "r": 2.0,       # Molar Ratio [0-10]
-  "d": 1.18,      # Density (g/cm³) [0.6-2.0]
+  "d": 1.18,      # Density (g/cm³) [0.1-5.0]
   "v": 259,       # Viscosity (mPa·s) [0-2000]
   "m": 0.1,       # DES/Oil Mass Ratio [0-1]
   "w": 0.05,      # Water (%) [0-100]
@@ -240,7 +249,9 @@ Response:
   "yield_std": 2.15,
   "yield_ci_95": 4.30,
   "residual_glycerol": 0.197,
-  "purity": 99.803
+  "purity": 99.803,
+  "warnings": [],
+  "oob": false
 }
 ```
 
