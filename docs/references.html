@@ -4,318 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>References - Biodiesel Yield Calculator</title>
-<<<<<<< HEAD
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>References - Biodiesel Yield Calculator</title>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-        <style>
-            /* Use index.html styling for consistent header/footer */
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            :root{ --g1: #7f5af0; --g2: #5eead4; --g3: #ff7ab6; --card: rgba(255,255,255,0.9); --muted: rgba(20,20,20,0.6); --glass: rgba(255,255,255,0.06); --shadow: 0 8px 30px rgba(20,20,30,0.08);} 
-            html,body{ height:100%; }
-            body{ font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color: var(--muted); background: linear-gradient(180deg, #0f1724 0%, #071023 100%); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; line-height:1.5; }
-            .blobs{ position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
-            .blob{ position:absolute; filter: blur(80px); opacity:0.9; transform: translate3d(0,0,0); }
-            .blob.b1{ width:60vmax; height:60vmax; left:-20vmin; top:-25vmin; background: radial-gradient(circle at 30% 30%, var(--g1) 0%, transparent 40%); animation: float 18s ease-in-out infinite; }
-            .blob.b2{ width:50vmax; height:50vmax; right:-15vmin; top:-10vmin; background: radial-gradient(circle at 70% 30%, var(--g2) 0%, transparent 40%); animation: float 22s ease-in-out infinite reverse; }
-            .blob.b3{ width:45vmax; height:45vmax; left:10vmin; bottom:-25vmin; background: radial-gradient(circle at 40% 60%, var(--g3) 0%, transparent 40%); animation: float 20s ease-in-out infinite; }
-            @keyframes float{ 0%{ transform: translateY(0) scale(1); } 50%{ transform: translateY(6vh) scale(1.04); } 100%{ transform: translateY(0) scale(1); } }
-            header{ width:100%; padding:3rem 4vw; display:flex; gap:1rem; align-items:center; justify-content:space-between; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)); color: #fff; position:relative; z-index:2; backdrop-filter: blur(6px) saturate(120%); }
-            .header-content{ flex:1; text-align:left; } header h1{ font-size:2rem; font-weight:700; color:#fff; margin-bottom:0.25rem; } header p{ font-size:0.95rem; color: rgba(255,255,255,0.8); font-weight:300; }
-            .header-buttons{ display:flex; gap:0.6rem; align-items:center; } .header-btn{ background: rgba(255,255,255,0.06); color: #fff; padding:0.5rem 0.9rem; border-radius:8px; text-decoration:none; display:inline-flex; gap:0.6rem; align-items:center; border:1px solid rgba(255,255,255,0.06); font-weight:600; }
-            .header-btn:hover{ transform: translateY(-3px); }
-            .container{ width:100%; padding:3rem 4vw; max-width:none; margin:0 auto; }
-            .section{ background: linear-gradient(180deg, var(--card), rgba(255,255,255,0.85)); border-radius:14px; padding:2rem; box-shadow:var(--shadow); color: #071023; margin-bottom:2rem; }
-            .section h2{ color:#0b2040; font-size:1.8rem; margin-bottom:1rem; }
-            .back-link{ display:inline-block; color:#0b2040; font-weight:600; margin-bottom:1.5rem; text-decoration:none; }
-            .reference-item{ padding:1rem; margin-bottom:1rem; background: #f7fafc; border-left:6px solid rgba(127,90,240,0.12); border-radius:8px; }
-            .reference-title{ font-weight:700; color:#0b2040; }
-            .reference-authors{ color: rgba(20,20,20,0.6); font-style:italic; }
-            footer{ padding:2rem 4vw; color: rgba(255,255,255,0.9); text-align:center; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); margin-top:3rem; }
-            @media (max-width:600px){ header{ padding:2rem 4vw; } header h1{ font-size:1.5rem; } }
-        </style>
-    </head>
-    <body>
-        <div class="blobs" aria-hidden="true">
-            <div class="blob b1"></div>
-            <div class="blob b2"></div>
-            <div class="blob b3"></div>
-        </div>
-        <header>
-            <div class="header-content">
-                <h1>References & Resources</h1>
-                <p>Scientific Papers and Technical Resources</p>
-=======
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --bg: #f3f4f6;
-            --surface: #ffffff;
-            --surface-soft: #f4f3ef;
-            --text: #162635;
-            --muted: #5b6d82;
-            --primary: #2f537d;
-            --secondary: #4f79a0;
-            --accent: #b68b51;
-            --border: rgba(47, 83, 125, 0.12);
-            --shadow: 0 28px 70px rgba(37, 59, 86, 0.1);
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            line-height: 1.8;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: white;
-            padding: 2.5rem 1rem;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        header h1 { font-size: 2.4rem; margin-bottom: 0.5rem; }
-        header p { font-size: 1rem; opacity: 0.9; }
-
-        .container {
-            max-width: 1080px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 2rem;
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 700;
-            transition: color 0.25s ease, transform 0.25s ease;
-        }
-        .back-link:hover { color: var(--accent); transform: translateX(2px); }
-
-        .section {
-            background: var(--surface);
-            border-radius: 24px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
-
-        .section h2 {
-            color: var(--primary);
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 3px solid rgba(47, 83, 125, 0.14);
-            padding-bottom: 0.65rem;
-        }
-
-        .section h3 {
-            color: var(--secondary);
-            font-size: 1.4rem;
-            margin-top: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .section p { margin-bottom: 1rem; text-align: justify; color: var(--muted); }
-        .section ul, .section ol { margin-left: 1.75rem; margin-bottom: 1rem; }
-        .section li { margin-bottom: 0.55rem; }
-
-        .subsection {
-            background: var(--surface-soft);
-            padding: 1.4rem;
-            border-left: 4px solid var(--accent);
-            margin: 1.5rem 0;
-            border-radius: 16px;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 380px;
-            margin: 2rem 0;
-            padding: 1rem;
-            background: var(--surface);
-            border-radius: 18px;
-            box-shadow: 0 18px 30px rgba(37, 59, 86, 0.08);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin: 1.5rem 0;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, rgba(79, 121, 148, 0.08), rgba(182, 139, 81, 0.08));
-            padding: 1.5rem;
-            border-radius: 18px;
-            border-left: 4px solid var(--secondary);
-            text-align: center;
-        }
-
-        .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); margin: 0.5rem 0; }
-        .stat-label { color: var(--muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; }
-
-        .timeline { position: relative; padding: 2rem 0; }
-        .timeline-item { padding-left: 3rem; margin-bottom: 2rem; position: relative; }
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 16px;
-            height: 16px;
-            background: var(--secondary);
-            border-radius: 50%;
-            border: 3px solid var(--primary);
-        }
-        .timeline-item::after {
-            content: '';
-            position: absolute;
-            left: 7px;
-            top: 16px;
-            width: 2px;
-            height: calc(100% + 2rem);
-            background: rgba(47, 83, 125, 0.12);
-        }
-        .timeline-item:last-child::after { display: none; }
-        .timeline-date { color: var(--secondary); font-weight: 700; margin-bottom: 0.5rem; }
-        .timeline-title { color: var(--primary); font-weight: 700; font-size: 1.1rem; margin-bottom: 0.3rem; }
-
-        .code-block {
-            background: #f2f2ec;
-            border-left: 4px solid var(--primary);
-            padding: 1rem;
-            margin: 1rem 0;
-            font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
-            font-size: 0.92rem;
-            overflow-x: auto;
-            border-radius: 12px;
-        }
-
-        .highlight {
-            background: #fff4db;
-            padding: 0.2rem 0.4rem;
-            border-radius: 5px;
-        }
-
-        footer {
-            background-color: var(--primary);
-            color: white;
-            text-align: center;
-            padding: 2rem 1rem;
-            margin-top: 3rem;
-            border-radius: 24px;
-        }
-
-        @media (max-width: 768px) {
-            header h1 { font-size: 2rem; }
-            .section { padding: 1.5rem; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .chart-container { height: 300px; }
-        }
-    </style> 
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{ --primary:#2f537d; --secondary:#4f79a0; --accent:#b68a51; --bg:linear-gradient(135deg,#152b45 0%,#1f3d58 100%); --card:#fff; }
+        body{ font-family:'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Arial; background:var(--bg); color:#102233; -webkit-font-smoothing:antialiased; }
+        header{ padding:2.5rem 4vw; color:#fff; text-align:center; }
+        .container{ max-width:980px; margin:2rem auto; padding:0 1rem; }
+        .section{ background:var(--card); border-radius:14px; padding:1.5rem; box-shadow:0 18px 40px rgba(4,12,24,0.12); margin-bottom:1rem; }
+        .reference-item{ padding:1rem; border-left:6px solid rgba(127,90,240,0.12); border-radius:8px; background:#fbfbfb; margin-bottom:1rem; }
+        .reference-title{ font-weight:700; color:#0b2040; }
+        .reference-authors{ color:rgba(11,32,64,0.65); font-style:italic; margin-bottom:0.25rem; }
+        footer{ padding:2rem 4vw; color:#fff; text-align:center; margin-top:2rem; }
+    </style>
 </head>
 <body>
     <header>
         <h1>References & Resources</h1>
-        <p>Scientific Papers and Technical Resources</p>
+        <p style="opacity:0.9;">Scientific Papers and Technical Resources</p>
     </header>
 
     <div class="container">
-        <a href="index.html" class="back-link">Back to Calculator</a>
+        <a href="index.html" style="display:inline-block;color:var(--primary);font-weight:700;margin-bottom:1rem;text-decoration:none;">← Back to Calculator</a>
 
-        <!-- Foundational ML Papers -->
         <div class="section">
             <h2>Machine Learning & Deep Learning</h2>
-            <div class="category-intro">
-                The following works provide the theoretical foundation for the transformer architecture and deep learning methodologies employed by this system.
->>>>>>> a60c04e042e2c6537d8b98cb77e392a5f8ab47eb
-            </div>
-            <div class="header-buttons">
-                <a href="https://github.com/almazorymbetov-nuedukz/yield_calculator" target="_blank" class="header-btn" title="Visit GitHub Repository">
-                    <i class="fab fa-github"></i> GitHub
-                </a>
-                <a href="readme.html" class="header-btn" title="View Project Documentation">
-                    <i class="fas fa-book"></i> README
-                </a>
-                <a href="references.html" class="header-btn" title="View References">
-                    <i class="fas fa-link"></i> References
-                </a>
-                <a href="setup.html" class="header-btn configure" title="Configure Backend">
-                    <i class="fas fa-cog"></i> Configure
-                </a>
-            </div>
-        </header>
+            <p style="color:rgba(11,32,64,0.7);">Foundational works that influenced the architecture and techniques used in this project.</p>
 
-        <div class="container">
-            <a href="index.html" class="back-link">Back to Calculator</a>
-
-            <div class="section">
-                <h2>Machine Learning & Deep Learning</h2>
-                <div style="margin-bottom:1rem; font-style:italic; color:rgba(11,32,64,0.7);">The following works provide the theoretical foundation for the transformer architecture and deep learning methodologies employed by this system.</div>
-
-                <div class="reference-item">
-                    <div style="margin-bottom:0.5rem;"><span style="display:inline-block; background:#7f5af0; color:#fff; padding:0.15rem 0.5rem; border-radius:4px; margin-right:0.5rem; font-size:0.75rem;">Transformer</span><span style="font-size:0.75rem; color:rgba(11,32,64,0.6);">2017</span></div>
-                    <div class="reference-title">Attention Is All You Need</div>
-                    <div class="reference-authors">Vaswani, A., et al.</div>
-                    <div class="reference-info" style="color:rgba(11,32,64,0.6); margin-top:0.25rem;">Advances in Neural Information Processing Systems (NeurIPS), 2017</div>
-                    <div class="reference-abstract" style="margin-top:0.5rem; color:rgba(11,32,64,0.7);">Introduces the Transformer architecture based on self-attention mechanisms, which has become the foundation for state-of-the-art models in NLP and beyond.</div>
-                    <a href="https://arxiv.org/abs/1706.03762" target="_blank" class="reference-link" style="margin-top:0.5rem; display:inline-block;">Read Paper</a>
-                </div>
-
-                <div class="reference-item">
-                    <div style="margin-bottom:0.5rem;"><span style="display:inline-block; background:#5eead4; color:#063; padding:0.15rem 0.5rem; border-radius:4px; margin-right:0.5rem; font-size:0.75rem;">Attention</span><span style="font-size:0.75rem; color:rgba(11,32,64,0.6);">2015</span></div>
-                    <div class="reference-title">Neural Machine Translation by Jointly Learning to Align and Translate</div>
-                    <div class="reference-authors">Bahdanau, D., Cho, K., Bengio, Y.</div>
-                    <div class="reference-info" style="color:rgba(11,32,64,0.6); margin-top:0.25rem;">International Conference on Learning Representations (ICLR), 2015</div>
-                    <div class="reference-abstract" style="margin-top:0.5rem; color:rgba(11,32,64,0.7);">Introduces the attention mechanism for sequence-to-sequence models. This foundational work on attention provides the basis for the multi-head self-attention used in the Biodiesel Yield Calculator.</div>
-                    <a href="https://arxiv.org/abs/1409.0473" target="_blank" class="reference-link" style="margin-top:0.5rem; display:inline-block;">Read Paper</a>
-                </div>
+            <div class="reference-item">
+                <div class="reference-title">Attention Is All You Need</div>
+                <div class="reference-authors">Vaswani, A., et al. (2017)</div>
+                <div style="color:rgba(11,32,64,0.7);margin-top:0.4rem;">Introduces the Transformer architecture based on self-attention mechanisms.</div>
+                <a href="https://arxiv.org/abs/1706.03762" target="_blank" style="margin-top:0.5rem;display:inline-block;color:var(--primary);">Read Paper</a>
             </div>
 
-            <div class="section">
-                <h2>Biodiesel Production & Chemistry</h2>
-                <div style="margin-bottom:1rem; font-style:italic; color:rgba(11,32,64,0.7);">The following references address chemical engineering and thermodynamic processes relevant to biodiesel production and yield prediction.</div>
-
-                <div class="reference-item">
-                    <div class="reference-title">Biodiesel Production Technology: From Feedstocks to Fuel</div>
-                    <div class="reference-authors">Dorado, M.P., et al.</div>
-                    <div class="reference-info" style="color:rgba(11,32,64,0.6); margin-top:0.25rem;">Biofuel Technology Reviews, 2015</div>
-                    <a href="#" class="reference-link" style="margin-top:0.5rem; display:inline-block;">Reference</a>
-                </div>
+            <div class="reference-item">
+                <div class="reference-title">Neural Machine Translation by Jointly Learning to Align and Translate</div>
+                <div class="reference-authors">Bahdanau, D., Cho, K., Bengio, Y. (2015)</div>
+                <div style="color:rgba(11,32,64,0.7);margin-top:0.4rem;">Introduces the attention mechanism for sequence-to-sequence models.</div>
+                <a href="https://arxiv.org/abs/1409.0473" target="_blank" style="margin-top:0.5rem;display:inline-block;color:var(--primary);">Read Paper</a>
             </div>
-
-            <div class="section">
-                <h2>Technical Resources & Libraries</h2>
-                <div style="margin-bottom:1rem; font-style:italic; color:rgba(11,32,64,0.7);">Software frameworks, libraries, and tools employed by the Biodiesel Yield Calculator backend and frontend.</div>
-
-                <div class="reference-item">
-                    <div class="reference-title">PyTorch: An Imperative Style, High-Performance Deep Learning Library</div>
-                    <div class="reference-authors">Paszke, A., et al.</div>
-                    <div class="reference-info" style="color:rgba(11,32,64,0.6); margin-top:0.25rem;">Neural Information Processing Systems (NeurIPS), 2019</div>
-                    <a href="https://pytorch.org" target="_blank" class="reference-link" style="margin-top:0.5rem; display:inline-block;">Official Site</a>
-                </div>
-            </div>
-
         </div>
 
-        <footer>
-            <p><strong>Biodiesel Yield Calculator v2.0</strong></p>
-            <p>National Laboratory Astana | Computational Engineering and Materials Science Laboratory</p>
-            <p>© 2026</p>
-        </footer>
-    </body>
-    </html>
-        <p style="margin-top: 1rem;"><strong>National Laboratory Astana</strong></p>
+        <div class="section">
+            <h2>Biodiesel Production & Chemistry</h2>
+            <div class="reference-item">
+                <div class="reference-title">Biodiesel Production Technology: From Feedstocks to Fuel</div>
+                <div class="reference-authors">Dorado, M.P., et al.</div>
+                <div style="color:rgba(11,32,64,0.7);margin-top:0.4rem;">Review of feedstocks, process intensification and conversion technologies relevant to biodiesel production.</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Technical Resources & Libraries</h2>
+            <div class="reference-item">
+                <div class="reference-title">PyTorch</div>
+                <div class="reference-authors">Paszke, A., et al.</div>
+                <div style="color:rgba(11,32,64,0.7);margin-top:0.4rem;">High-performance deep learning library used for model training.</div>
+                <a href="https://pytorch.org" target="_blank" style="margin-top:0.5rem;display:inline-block;color:var(--primary);">Official Site</a>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>Biodiesel Yield Calculator v2.0</strong></p>
+        <p>National Laboratory Astana | Computational Engineering and Materials Science Laboratory</p>
+        <p>© 2026</p>
+    </footer>
+</body>
+</html>
