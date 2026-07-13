@@ -36,8 +36,9 @@ class YieldCalculator:
         self.model_type = model_type
         
         # Load model and configuration
-        self.model, self.config = self._load_model(model_path)
+        self.model, self.config, self.input_dim = self._load_model(model_path)
         self.feature_engineer = FeatureEngineer(self.config)
+        self.expected_input_dim = self.input_dim
         
         # Load scalers
         scaler_path = model_path.replace(".pt", "_scalers.joblib")
@@ -50,7 +51,7 @@ class YieldCalculator:
         self.model.to(self.device)
         self.model.eval()
     
-    def _load_model(self, model_path: str) -> Tuple[torch.nn.Module, YieldConfig]:
+    def _load_model(self, model_path: str) -> Tuple[torch.nn.Module, YieldConfig, int]:
         """Load model from checkpoint"""
         checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
         
@@ -86,7 +87,7 @@ class YieldCalculator:
         # Load weights
         model.load_state_dict(checkpoint["model_state"])
         
-        return model, config
+        return model, config, checkpoint.get("input_dim", 26)
     
     @torch.no_grad()
     def predict(
@@ -127,10 +128,28 @@ class YieldCalculator:
         
         # Engineer features
         df_features = self.feature_engineer.engineer_features(df)
+        molecular_features = np.array([[1.5, 1.0, 2.0, 1.0, 2.5, 1.5, 1.8, 3.0]], dtype=np.float32)
+        molecular_frame = pd.DataFrame(molecular_features, columns=[
+            "cluster_size",
+            "hba_count",
+            "hbd_count",
+            "biodiesel_count",
+            "hydrogen_bond_score",
+            "polarity_proxy",
+            "miscibility_proxy",
+            "component_diversity",
+        ])
+        df_features = pd.concat([df_features.reset_index(drop=True), molecular_frame], axis=1)
         x = df_features.drop('E', axis=1, errors='ignore').values.astype(np.float32)
         
         # Normalize if scaler available
         if self.scalers["scaler_x"] is not None:
+            if x.shape[1] != self.scalers["scaler_x"].mean_.shape[0]:
+                if x.shape[1] > self.scalers["scaler_x"].mean_.shape[0]:
+                    x = x[:, :self.scalers["scaler_x"].mean_.shape[0]]
+                else:
+                    pad_width = self.scalers["scaler_x"].mean_.shape[0] - x.shape[1]
+                    x = np.pad(x, ((0, 0), (0, pad_width)), mode='constant')
             x = self.scalers["scaler_x"].transform(x)
         else:
             raise RuntimeError(

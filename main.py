@@ -14,6 +14,7 @@ from yield_calc.tools import set_random_seed, get_device
 MODEL_DIR = "checkpoints"
 MODEL_STANDARD = os.path.join(MODEL_DIR, "yield_model_standard.pt")
 MODEL_ATTENTION = os.path.join(MODEL_DIR, "yield_model_attention.pt")
+MODEL_TRANSFER = os.path.join(MODEL_DIR, "yield_model_transfer.pt")
 
 # Initialize random seed
 set_random_seed(42)
@@ -22,29 +23,37 @@ set_random_seed(42)
 calculator = None
 
 
-def initialize_calculator(model_type: str = "attention"):
-    """Initialize calculator with trained model"""
+def initialize_calculator(model_type: str = "transfer"):
+    """Initialize calculator with the best available trained model."""
     global calculator
-    
-    # Prioritize the properly trained model with config
-    primary_model = MODEL_ATTENTION if model_type == "attention" else MODEL_STANDARD
-    fallback_model = os.path.join(MODEL_DIR, "best_model.pt")
-    
-    if os.path.exists(primary_model):
-        model_path = primary_model
-    elif os.path.exists(fallback_model):
-        model_path = fallback_model
-        print(f"Warning: Using fallback model {fallback_model}. Consider training with: python train.py --model_type {model_type}")
+
+    candidates = []
+    if model_type == "transfer":
+        candidates.extend([(MODEL_TRANSFER, "transfer"), (MODEL_ATTENTION, "attention"), (MODEL_STANDARD, "standard")])
+    elif model_type == "attention":
+        candidates.extend([(MODEL_ATTENTION, "attention"), (MODEL_TRANSFER, "transfer"), (MODEL_STANDARD, "standard")])
     else:
-        raise FileNotFoundError(
-            f"No trained model found.\n\n"
-            f"Please train a model first by running:\n"
-            f"  python train.py --model_type {model_type} --train_file data/training_data.csv\n"
-            f"  python train.py --model_type attention --train_file data/training_data.csv (recommended)"
-        )
-    
-    device = get_device()
-    calculator = YieldCalculator(model_path, model_type=model_type, device=str(device))
+        candidates.extend([(MODEL_STANDARD, "standard"), (MODEL_ATTENTION, "attention"), (MODEL_TRANSFER, "transfer")])
+
+    fallback_model = os.path.join(MODEL_DIR, "best_model.pt")
+    candidates.append((fallback_model, model_type))
+
+    for model_path, resolved_model_type in candidates:
+        if not os.path.exists(model_path):
+            continue
+        try:
+            device = get_device()
+            calculator = YieldCalculator(model_path, model_type=resolved_model_type, device=str(device))
+            return calculator
+        except Exception as exc:
+            print(f"Warning: could not load {model_path} as {resolved_model_type}: {exc}")
+
+    raise FileNotFoundError(
+        f"No trained model found.\n\n"
+        f"Please train a model first by running:\n"
+        f"  python train.py --model_type transfer --train_file data/training_data.csv\n"
+        f"  python train.py --model_type attention --train_file data/training_data.csv"
+    )
 
 
 def train_and_save_model():

@@ -21,7 +21,9 @@ CORS(app,
 
 # Model configuration
 MODEL_DIR = "checkpoints"
+MODEL_TRANSFER = os.path.join(MODEL_DIR, "yield_model_transfer.pt")
 MODEL_ATTENTION = os.path.join(MODEL_DIR, "yield_model_attention.pt")
+MODEL_STANDARD = os.path.join(MODEL_DIR, "yield_model_standard.pt")
 FALLBACK_MODEL = os.path.join(MODEL_DIR, "best_model.pt")
 LOG_DIR = "logs"
 LOG_FILE = os.path.join(LOG_DIR, "prediction.log")
@@ -40,28 +42,35 @@ calculator = None
 
 
 def initialize_calculator():
-    """Initialize calculator with trained model"""
+    """Initialize calculator with the best available trained model."""
     global calculator
-    
-    # Try to load the attention model first
-    if os.path.exists(MODEL_ATTENTION):
-        model_path = MODEL_ATTENTION
-        model_type = "attention"
-    elif os.path.exists(FALLBACK_MODEL):
-        model_path = FALLBACK_MODEL
-        model_type = "attention"  # Assume it's attention model
-    else:
-        return False
-    
-    try:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        calculator = YieldCalculator(model_path, model_type=model_type, device=device)
-        logging.info(f"Calculator initialized with model={model_path}, device={device}")
-        return True
-    except Exception as e:
-        print(f"Error initializing calculator: {e}")
-        logging.error(f"Calculator initialization failed: {e}")
-        return False
+
+    candidates = [
+        (MODEL_TRANSFER, "transfer"),
+        (MODEL_ATTENTION, "attention"),
+        (MODEL_STANDARD, "standard"),
+        (FALLBACK_MODEL, "transfer"),
+        (FALLBACK_MODEL, "attention"),
+        (FALLBACK_MODEL, "standard"),
+    ]
+
+    for model_path, model_type in candidates:
+        if not os.path.exists(model_path):
+            continue
+
+        try:
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            calculator = YieldCalculator(model_path, model_type=model_type, device=device)
+            logging.info(f"Calculator initialized with model={model_path}, model_type={model_type}, device={device}")
+            return True
+        except Exception as e:
+            print(f"Error initializing calculator with {model_path}: {e}")
+            logging.error(f"Calculator initialization failed for {model_path}: {e}")
+
+    return False
+
+
+initialize_calculator()
 
 
 @app.route('/api/health', methods=['GET', 'OPTIONS'])
