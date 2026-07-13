@@ -165,6 +165,7 @@ if __name__ == "__main__":
             "Inspired by MACE (Multi-Atomic Cluster Expansion)\n\n"
             "Features:\n"
             "• Transformer-based attention networks\n"
+            "• Transfer-learning style molecular feature head\n"
             "• Uncertainty quantification\n"
             "• Advanced feature engineering\n"
             "• Modular, scalable architecture"

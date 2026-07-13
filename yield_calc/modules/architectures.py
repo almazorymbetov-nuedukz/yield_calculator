@@ -234,3 +234,36 @@ class HybridYieldNet(nn.Module):
         
         x = self.output(x)
         return x
+
+
+class TransferLearningYieldNet(nn.Module):
+    """Lightweight transfer-learning style regressor for molecular clusters."""
+
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dim: int = 64,
+        pretrained_dim: Optional[int] = None,
+        dropout: float = 0.1,
+        output_dim: int = 1,
+    ):
+        super().__init__()
+        pretrained_dim = pretrained_dim or input_dim
+
+        self.pretrained_projection = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+        )
+        self.task_head = nn.Sequential(
+            nn.Linear(hidden_dim + input_dim, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim, output_dim),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        pretrained_features = self.pretrained_projection(x)
+        fused = torch.cat([x, pretrained_features], dim=-1)
+        return self.task_head(fused)

@@ -1,0 +1,12 @@
+{
+  "clusters": [
+    {
+      "name": "des_cluster_1",
+      "components": [
+        {"name": "choline", "role": "hba", "count": 1},
+        {"name": "glycerol", "role": "hbd", "count": 2},
+        {"name": "methyl_oleate", "role": "biodiesel", "count": 1}
+      ]
+    }
+  ]
+}

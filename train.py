@@ -11,13 +11,8 @@ import joblib
 import json
 import os
 
-from yield_calc.data import YieldConfig, FeatureEngineer
-from yield_calc.modules import (
-    YieldNet,
-    YieldNetWithAttention,
-    EnsembleYieldNet,
-    HybridYieldNet
-)
+from yield_calc.data import YieldConfig, FeatureEngineer, YieldDataset, build_molecular_cluster_dataset
+from yield_calc.modules import YieldNet, YieldNetWithAttention, TransferLearningYieldNet
 from yield_calc.tools import (
     Trainer, TrainingConfig, set_random_seed, get_device, get_dtype
 )
@@ -85,9 +80,6 @@ def train_model(args):
     print(f"  Num epochs: {args.num_epochs}")
     print(f"  Batch size: {args.batch_size}")
     print(f"  Learning rate: {args.learning_rate}")
-    print(f"  Val split: {args.val_split}")
-    print(f"  Test split: {args.test_split}")
-    print(f"  DataLoader workers: {args.num_workers}")
     
     # Create/load data
     print("\n" + "=" * 60)
@@ -111,8 +103,24 @@ def train_model(args):
     
     print("Engineering features...")
     df_engineered = feature_engineer.engineer_features(df)
-    
+
+    if args.molecular_clusters:
+        print(f"Building molecular-cluster features from: {args.molecular_clusters}")
+        with open(args.molecular_clusters, "r", encoding="utf-8") as handle:
+            cluster_payload = json.load(handle)
+        molecular_data = build_molecular_cluster_dataset(cluster_payload, output_path=None)
+        molecular_features = molecular_data["feature_matrix"]
+        if molecular_features.shape[0] > 0:
+            molecular_feature_names = molecular_data["feature_names"]
+            print(f"Generated {molecular_features.shape[0]} molecular cluster samples with {molecular_features.shape[1]} features")
+            molecular_feature_vector = molecular_features.mean(axis=0, keepdims=True)
+            repeated_features = np.repeat(molecular_feature_vector, len(df_engineered), axis=0)
+            molecular_frame = pd.DataFrame(repeated_features, columns=molecular_feature_names)
+            df_engineered = pd.concat([df_engineered.reset_index(drop=True), molecular_frame], axis=1)
+
     # Prepare X and y
+    if 'E' not in df_engineered.columns:
+        raise ValueError("Training data must contain an 'E' target column")
     X = df_engineered.drop('E', axis=1).values
     y = df_engineered[['E']].values
     
@@ -130,61 +138,16 @@ def train_model(args):
     dataset = torch.utils.data.TensorDataset(
         torch.FloatTensor(X), torch.FloatTensor(y)
     )
-    num_samples = len(dataset)
-    val_size = int(args.val_split * num_samples)
-    test_size = int(args.test_split * num_samples)
-    train_size = num_samples - val_size - test_size
-    if train_size <= 0:
-        raise ValueError("Train split is too small. Reduce val_split/test_split.")
-    if val_size <= 0:
-        raise ValueError("Validation split must allocate at least one sample.")
-    if test_size < 0:
-        raise ValueError("Test split cannot be negative.")
     
-    generator = torch.Generator().manual_seed(args.seed)
-    if test_size > 0:
-        train_dataset, val_dataset, test_dataset = random_split(
-            dataset,
-            [train_size, val_size, test_size],
-            generator=generator
-        )
-    else:
-        train_dataset, val_dataset = random_split(
-            dataset,
-            [train_size, val_size],
-            generator=generator
-        )
-        test_dataset = None
+    train_size = int(0.9 * len(dataset))
+    val_size = len(dataset) - train_size
+    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
     
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        shuffle=True,
-        num_workers=args.num_workers,
-        pin_memory=(device.type == 'cuda')
-    )
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.num_workers,
-     
-        pin_memory=(device.type == 'cuda')
-    )
-    test_loader = None
-    if test_dataset is not None:
-        test_loader = DataLoader(
-            test_dataset,
-            batch_size=args.batch_size,
-            shuffle=False,
-            num_workers=args.num_workers,
-            pin_memory=(device.type == 'cuda')
-        )
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
     
     print(f"Training samples: {len(train_dataset)}")
     print(f"Validation samples: {len(val_dataset)}")
-    if test_loader is not None:
-        print(f"Test samples: {len(test_dataset)}")
     print(f"Feature dimension: {X.shape[1]}")
     
     # Build model
@@ -209,23 +172,14 @@ def train_model(args):
             dropout=args.dropout
         )
         print("Created: YieldNetWithAttention (Transformer-based)")
-    elif args.model_type == "ensemble":
-        model = EnsembleYieldNet(
+    elif args.model_type == "transfer":
+        model = TransferLearningYieldNet(
             input_dim=X.shape[1],
             hidden_dim=args.hidden_dim,
-            num_layers=args.num_layers,
-            num_models=args.num_models,
-            dropout=args.dropout
+            pretrained_dim=max(8, min(X.shape[1], 8)),
+            dropout=args.dropout,
         )
-        print(f"Created: EnsembleYieldNet ({args.num_models} models)")
-    elif args.model_type == "hybrid":
-        model = HybridYieldNet(
-            input_dim=X.shape[1],
-            hidden_dim=args.hidden_dim,
-            num_layers=args.num_layers,
-            dropout=args.dropout
-        )
-        print("Created: HybridYieldNet (Dense + Residual)")
+        print("Created: TransferLearningYieldNet (Molecular transfer-learning style)")
     else:
         raise ValueError(f"Unknown model type: {args.model_type}")
     
@@ -244,39 +198,16 @@ def train_model(args):
         patience=args.patience,
         checkpoint_dir=args.checkpoint_dir,
         device=str(device),
-        lr_patience=args.lr_patience,
-        lr_factor=args.lr_factor,
-        min_lr=args.min_lr,
-        grad_clip=args.grad_clip,
-        min_delta=args.min_delta,
     )
     
     # Use Smooth L1 (Huber-like) loss for robust regression instead of MSE
-    trainer = Trainer(
-        model,
-        training_config,
-        loss_fn=torch.nn.SmoothL1Loss(),
-        y_scaler=scaler_y
-    )
+    trainer = Trainer(model, training_config, loss_fn=torch.nn.SmoothL1Loss())
     
     try:
         history = trainer.train(train_loader, val_loader)
         print("\nTraining completed successfully!")
     except KeyboardInterrupt:
         print("\nTraining interrupted by user")
-    
-    # If test data exists, evaluate the best model on the held-out test set
-    if test_loader is not None:
-        trainer.checkpoint_handler.load_best_model(model)
-        test_loss, test_metrics = trainer.evaluate(test_loader)
-        print("\n" + "=" * 60)
-        print("TEST EVALUATION")
-        print("=" * 60)
-        print(f"Test Loss: {test_loss:.6f}")
-        print(f"Test MAE: {test_metrics['mae']:.4f}")
-        print(f"Test R²: {test_metrics['r2']:.4f}")
-        history['test_loss'] = test_loss
-        history['test_metrics'] = test_metrics
     
     # Save final model
     print("\n" + "=" * 60)
@@ -293,7 +224,7 @@ def train_model(args):
         "config": config,
         "model_type": args.model_type,
         "input_dim": X.shape[1],
-        "input_features": list(df_engineered.drop('E', axis=1).columns)
+        "input_features": feature_engineer.feature_engineer.feature_cols if hasattr(feature_engineer, 'feature_engineer') else list(df_engineered.drop('E', axis=1).columns)
     }
     
     torch.save(checkpoint, model_save_path)
@@ -327,7 +258,7 @@ def main():
     
     # Model arguments
     parser.add_argument("--model_type", type=str, default="attention",
-                       choices=["standard", "attention", "ensemble", "hybrid"],
+                       choices=["standard", "attention", "transfer"],
                        help="Model architecture type")
     parser.add_argument("--hidden_dim", type=int, default=256,
                        help="Hidden layer dimension")
@@ -335,16 +266,8 @@ def main():
                        help="Number of layers")
     parser.add_argument("--attention_heads", type=int, default=8,
                        help="Number of attention heads (for attention model)")
-    parser.add_argument("--num_models", type=int, default=3,
-                       help="Number of ensemble members (for ensemble model)")
     parser.add_argument("--dropout", type=float, default=0.15,
                        help="Dropout rate")
-    parser.add_argument("--val_split", type=float, default=0.1,
-                       help="Fraction of data used for validation")
-    parser.add_argument("--test_split", type=float, default=0.0,
-                       help="Fraction of data used for a held-out test set")
-    parser.add_argument("--num_workers", type=int, default=0,
-                       help="Number of DataLoader workers")
     
     # Training arguments
     parser.add_argument("--num_epochs", type=int, default=3000,
@@ -357,16 +280,8 @@ def main():
                        help="Weight decay (L2 regularization)")
     parser.add_argument("--patience", type=int, default=100,
                        help="Early stopping patience")
-    parser.add_argument("--lr_patience", type=int, default=10,
-                       help="ReduceLROnPlateau patience")
-    parser.add_argument("--lr_factor", type=float, default=0.5,
-                       help="Learning rate decay factor")
-    parser.add_argument("--min_lr", type=float, default=1e-7,
-                       help="Minimum learning rate")
-    parser.add_argument("--grad_clip", type=float, default=1.0,
-                       help="Gradient clipping norm")
-    parser.add_argument("--min_delta", type=float, default=1e-6,
-                       help="Minimum improvement for early stopping")
+    parser.add_argument("--molecular_clusters", type=str, default=None,
+                       help="Optional JSON file containing molecular cluster definitions")
     
     # System arguments
     parser.add_argument("--device", type=str, default="cpu",

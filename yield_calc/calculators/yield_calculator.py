@@ -7,7 +7,7 @@ import pandas as pd
 from typing import Dict, Tuple, Optional
 import joblib
 
-from ..modules import YieldNet, YieldNetWithAttention
+from ..modules import YieldNet, YieldNetWithAttention, TransferLearningYieldNet
 from ..data import FeatureEngineer, YieldConfig, QuantumReferences
 from ..tools import get_device, get_dtype
 
@@ -72,6 +72,13 @@ class YieldCalculator:
                 num_layers=config.num_layers,
                 num_heads=config.attention_heads,
                 dropout=config.dropout
+            )
+        elif self.model_type == "transfer":
+            model = TransferLearningYieldNet(
+                input_dim=checkpoint.get("input_dim", 26),
+                hidden_dim=config.num_channels,
+                pretrained_dim=max(8, min(checkpoint.get("input_dim", 26), 8)),
+                dropout=config.dropout,
             )
         else:
             raise ValueError(f"Unknown model type: {self.model_type}")

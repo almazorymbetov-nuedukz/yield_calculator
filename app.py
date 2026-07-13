@@ -171,8 +171,9 @@ def get_info():
         'description': 'Advanced ML-based yield prediction with transformer architecture',
         'features': [
             'Transformer-based attention networks',
+            'Transfer-learning style molecular feature head',
             'Uncertainty quantification via ensemble',
-            'Advanced feature engineering (26 features)',
+            'Advanced feature engineering (26+ features)',
             'GPU acceleration support',
             'Real-time predictions'
         ],
